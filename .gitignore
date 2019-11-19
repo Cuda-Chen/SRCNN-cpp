@@ -30,6 +30,7 @@
 *.exe
 *.out
 *.app
+SRCNN_cpp
 
 ### CMake ###
 CMakeLists.txt.user
