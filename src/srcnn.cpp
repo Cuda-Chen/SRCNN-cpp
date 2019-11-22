@@ -3,24 +3,26 @@
 #include "opencv2/opencv.hpp"
 #include "srcnn.hpp"
 
+using namespace std;
+using namespace cv;
+
 SRCNN::SRCNN()
 {
 }
 
-void SRCNN::generate(std::string filename)
+void SRCNN::generate(string filename)
 {
-    using namespace cv;
+    this->img = imread(filename, IMREAD_COLOR);
+    cvtColor(this->img, this->gray, COLOR_BGR2GRAY);
+    resize(this->gray, this->bicubic, Size(), this->scale, this->scale, INTER_CUBIC);
+}
 
-    Mat img, gray;
-    img = imread(filename, IMREAD_COLOR);
-    cvtColor(img, gray, COLOR_BGR2GRAY);
-    Mat bicubic;
-    resize(gray, bicubic, Size(), this->scale, this->scale, INTER_CUBIC);
-
+void SRCNN::showOutput()
+{
     namedWindow("input");
-    imshow("input", img);
+    imshow("input", this->img);
     waitKey(0);
     namedWindow("bicubic");
-    imshow("bicubic", bicubic);
+    imshow("bicubic", this->bicubic);
     waitKey(0);
 }
