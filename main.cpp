@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     {
         cout << "Usage: ./SRCNN_cpp <input image path>" << endl;
         return 1;
-    ]
+    }
     string filename = argv[1];
 
     SRCNN srcnn;
