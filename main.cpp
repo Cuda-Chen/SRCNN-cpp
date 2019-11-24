@@ -14,6 +14,7 @@ int main(int argc, char **argv)
     string filename = argv[1];
 
     SRCNN srcnn;
+    srcnn.checkWeightStatus();
     srcnn.generate(filename);
     srcnn.showOutput();
 

@@ -9,6 +9,7 @@ using namespace cv;
 
 SRCNN::SRCNN()
 {
+    
 }
 
 void SRCNN::generate(string filename)
@@ -29,9 +30,17 @@ void SRCNN::showOutput()
     waitKey(0);
 }
 
+void SRCNN::checkWeightStatus()
+{
+    for(string elem: this->weights)
+    {
+        cout << elem << endl;
+    }
+}
+
 void SRCNN::convolution(double *input, double *output, Dim inputDim,
-    Dim outputDim, double *kernels, Dim kernelDim, int stride,
-    double *bias, Dim biasDim)
+    Dim outputDim, double *kernels, Dim kernelDim, int stride/* = 1*/,
+    double *bias/* = NULL*/, Dim biasDim/* = make_tuple(0, 0, 0)*/)
 {
     int kernelHeight = get<1>(kernelDim);
     int kernelWidth = get<2>(kernelDim);
