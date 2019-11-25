@@ -33,9 +33,9 @@ private:
     std::string weightsConv1 = "weights_conv1.txt";
     std::string weightsConv2 = "weights_conv2.txt";
     std::string weightsConv3 = "weights_conv3.txt";
-    std::string biasConv1 = "bias_conv1.txt";
-    std::string biasConv2 = "bias_conv2.txt";
-    std::string biasConv3 = "bias_conv3.txt";
+    std::string biasConv1 = "biases_conv1.txt";
+    std::string biasConv2 = "biases_conv2.txt";
+    std::string biasConv3 = "biases_conv3.txt";
     std::vector<std::string> weights = {weightsConv1, weightsConv2,
         weightsConv3, biasConv1, biasConv2, biasConv3};
 

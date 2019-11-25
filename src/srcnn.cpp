@@ -1,5 +1,6 @@
 #include <string>
 #include <tuple>
+#include <fstream>
 
 #include "opencv2/opencv.hpp"
 #include "srcnn.hpp"
@@ -8,8 +9,11 @@ using namespace std;
 using namespace cv;
 
 SRCNN::SRCNN()
-{
-    
+{ 
+    for(unsigned int i = 0; i < this->weights.size(); i++)
+    {
+        this->weights[i] = this->weights[i].insert(0, this->basePath);
+    }
 }
 
 void SRCNN::generate(string filename)
@@ -32,9 +36,28 @@ void SRCNN::showOutput()
 
 void SRCNN::checkWeightStatus()
 {
-    for(string elem: this->weights)
+    for(string weightPath: this->weights)
     {
-        cout << elem << endl;
+        ifstream input(weightPath);
+        if(!input.is_open())
+        {
+            cerr << "file " << weightPath << " opened unsuccessfully" << endl;
+            continue;
+        }
+        vector<double> contents;
+        double temp;
+        while(input >> temp)
+        {
+            contents.push_back(temp);
+        }
+        
+        cout << weightPath << " " << contents.size() << "\t";
+        for(unsigned int i = 0; i < 3; i++)
+        {
+            cout << contents[i] << " ";
+        }
+        cout << endl;
+        input.close();
     }
 }
 
