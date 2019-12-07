@@ -22,6 +22,7 @@ public:
     void generate(std::string filename);
     void showOutput();
     void checkWeightStatus();
+    void testConv(std::string filename);
 private:
     int scale = 2;
     cv::Mat img;

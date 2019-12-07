@@ -5,6 +5,8 @@
 #include "opencv2/opencv.hpp"
 #include "srcnn.hpp"
 
+#include "gaussian.hpp"
+
 using namespace std;
 using namespace cv;
 
@@ -61,6 +63,64 @@ void SRCNN::checkWeightStatus()
     }
 }
 
+void SRCNN::testConv(string filename)
+{
+    Mat gray = imread(filename, IMREAD_GRAYSCALE);
+    imshow("gray", gray);
+    waitKey(0);
+
+    // ordinary Gaussian filter
+    int width = gray.cols;
+    int height = gray.rows;
+    unsigned char *source = new unsigned char[height * width];
+    unsigned char *destination = new unsigned char[height * width];
+
+    // Conv test 
+    double *input = new double[1 * height * width];
+    double *output = new double[1 * height * width];
+    Dim inputDim = make_tuple(1, height, width);
+    Dim outputDim = make_tuple(1, height, width);
+    unsigned char *dst = new unsigned char[height * width];
+
+    int kernelWidth = 9;
+    int kernelHeight = 9;
+    double sigma = 3.0;
+
+    // Conv test
+    double *kernel = new double[kernelHeight * kernelWidth];
+    Dim kernelDim = make_tuple(1, kernelHeight, kernelWidth);
+
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            source[(i * width) + j] = gray.at<uchar>(i, j);
+            destination[(i * width) + j] = source[(i * width) + j];
+
+            input[(i * width) + j] = gray.at<uchar>(i, j) / 255.0;
+            output[(i * width) + j] = input[(i * width) + j];
+        }
+    }
+    generateKernel(kernelWidth, kernelHeight, sigma, kernel);
+
+    gaussianFilter(source, destination, width, height, kernelWidth, kernelHeight, sigma);
+    Mat result(height, width, CV_8UC1, destination);
+    imshow("gaussian", result);
+    waitKey(0);
+
+    convolution(input, output, inputDim, outputDim, kernel, kernelDim); 
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            dst[(i * width) + j] = output[(i * width) + j] * 255.0;
+        }
+    }
+    Mat result1(height, width, CV_8UC1, dst);
+    imshow("gaussian 1", result1);
+    waitKey(0);
+}
+
 void SRCNN::convolution(double *input, double *output, Dim inputDim,
     Dim outputDim, double *kernels, Dim kernelDim, int stride/* = 1*/,
     double *bias/* = NULL*/, Dim biasDim/* = make_tuple(0, 0, 0)*/)
@@ -94,8 +154,10 @@ void SRCNN::convolution(double *input, double *output, Dim inputDim,
                     }
                 }
 
-                // may have problem here
-                output[(k * height * width) + (i * width) + j] = sum + bias[(k * get<1>(biasDim) * get<2>(biasDim))];
+                if(bias != NULL)
+                {
+                    output[(k * height * width) + (i * width) + j] = sum + bias[(k * get<1>(biasDim) * get<2>(biasDim))];
+                }
             }
         }
     }
