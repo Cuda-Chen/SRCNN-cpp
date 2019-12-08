@@ -7,7 +7,8 @@
 
 #include "opencv2/opencv.hpp"
 
-typedef std::tuple<int, int, int> Dim; // CHW (# channel, # height, # width)
+typedef std::tuple<int, int, int> ImageDim; // CHW (# channel, # height, # width)
+typedef std::tuple<int, int, int, int> KernelDim; // (# currentChannel, # nextChannel, # height, # width)
 
 typedef enum
 {
@@ -40,16 +41,19 @@ private:
     std::vector<std::string> weights = {weightsConv1, weightsConv2,
         weightsConv3, biasConv1, biasConv2, biasConv3};
 
-    void convolution(double *input, double *output, Dim inputDim,
-        Dim outputDim, double *kernels, Dim kernelDim, int stride = 1,
-        double *bias = NULL, Dim biasDim = std::make_tuple(0, 0, 0));
-    void activation(double *input, double *output, Dim inputDim, 
+    void convolution(double *input, double *output, ImageDim inputDim,
+        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
+        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
+    void activation(double *input, double *output, ImageDim inputDim, 
         ACTIVATION activationType);
 
     inline double relu_activate(double x) 
     {
         return x * (x > 0);
     }
+
+    void readConvWeights(std::string filename, double *weights, bool special = false, bool isReverse = false);
+    void readBiasWeights(std::string filename, double *weights);
 };
 
 #endif
