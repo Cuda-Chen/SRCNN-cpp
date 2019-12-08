@@ -116,7 +116,8 @@ void SRCNN::testConv(string filename)
             dst[(i * width) + j] = output[(i * width) + j] * 255.0;
         }
     }
-    Mat result1(height, width, CV_8UC1, dst);
+    //Mat result1(height, width, CV_8UC1, dst);
+    Mat result1(height, width, CV_64FC1, output);
     imshow("gaussian 1", result1);
     waitKey(0);
 }
@@ -157,6 +158,10 @@ void SRCNN::convolution(double *input, double *output, Dim inputDim,
                 if(bias != NULL)
                 {
                     output[(k * height * width) + (i * width) + j] = sum + bias[(k * get<1>(biasDim) * get<2>(biasDim))];
+                }
+                else
+                {
+                    output[(k * height * width) + (i * width) + j] = sum;
                 }
             }
         }
