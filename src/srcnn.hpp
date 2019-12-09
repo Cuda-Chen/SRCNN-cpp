@@ -8,7 +8,7 @@
 #include "opencv2/opencv.hpp"
 
 typedef std::tuple<int, int, int> ImageDim; // CHW (# channel, # height, # width)
-typedef std::tuple<int, int, int, int> KernelDim; // (# currentChannel, # nextChannel, # height, # width)
+typedef std::tuple<int, int, int, int> KernelDim; // (# inputChannel, # height, # width, # outputChannel)
 
 typedef enum
 {
@@ -22,16 +22,21 @@ public:
     SRCNN(std::string weights);
     void generate(std::string filename);
     void showOutput();
+    int getTotalDimension(ImageDim dim);
+    int getTotalDimension(KernelDim dim);
+
+    // Unit test functions, do not use them.
     void checkWeightStatus();
     void testConv(std::string filename);
 private:
     int scale = 2;
     cv::Mat img;
     cv::Mat gray;
+    cv::Mat downsample;
     cv::Mat bicubic;
     cv::Mat output;
 
-    std::string basePath = "model/";
+    std::string basePath = "../model/";
     std::string weightsConv1 = "weights_conv1.txt";
     std::string weightsConv2 = "weights_conv2.txt";
     std::string weightsConv3 = "weights_conv3.txt";
