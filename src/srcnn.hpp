@@ -36,7 +36,8 @@ private:
     cv::Mat bicubic;
     cv::Mat output;
 
-    std::string basePath = "../model/";
+    std::string basePath = "./model/";
+    //std::string basePath = "./";
     std::string weightsConv1 = "weights_conv1.txt";
     std::string weightsConv2 = "weights_conv2.txt";
     std::string weightsConv3 = "weights_conv3.txt";
