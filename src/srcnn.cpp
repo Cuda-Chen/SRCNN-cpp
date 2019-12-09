@@ -36,19 +36,17 @@ void SRCNN::generate(string filename)
     int inputWidth = bicubicTemp.cols;
     int inputHeight = bicubicTemp.rows;
     cout << "input width height " << inputWidth << " " << inputHeight << endl;
-    cout << "input here" << endl;
     ImageDim inputDim = make_tuple(1, inputHeight, inputWidth);
     double *input = new double[inputHeight * inputWidth];
-    cout << "conv map here" << endl;
     ImageDim conv1Dim = make_tuple(64, inputHeight, inputWidth);
     ImageDim conv2Dim = make_tuple(32, inputHeight, inputWidth);
     ImageDim conv3Dim = make_tuple(1, inputHeight, inputWidth);
     double *conv1Data = new double[getTotalDimension(conv1Dim)];
     double *conv2Data = new double[getTotalDimension(conv2Dim)];
     double *conv3Data = new double[getTotalDimension(conv3Dim)];
-    cout << "output here" << endl;
     int outputWidth = inputWidth;
-    int outputHeight = outputHeight;
+    int outputHeight = inputHeight;
+    cout << "output width height " << outputWidth << " " << outputHeight << endl;
     double *dst = new double[outputHeight * outputWidth];
     cout << "assign input and output value" << endl;
     for(int i = 0; i < inputHeight; i++)
@@ -71,20 +69,20 @@ void SRCNN::generate(string filename)
     ImageDim bias2Dim = make_tuple(32, 1, 1);
     ImageDim bias3Dim = make_tuple(1, 1, 1);
     cout << "finish setting bias dim" << endl;
-    /*
     double *conv1Weights = new double[getTotalDimension(conv1WeightsDim)];
     double *conv2Weights = new double[getTotalDimension(conv2WeightsDim)];
     double *conv3Weights = new double[getTotalDimension(conv3WeightsDim)];
     double *bias1Weights = new double[getTotalDimension(bias1Dim)];
     double *bias2Weights = new double[getTotalDimension(bias2Dim)];
     double *bias3Weights = new double[getTotalDimension(bias3Dim)];
-    */
+    /*
     double *conv1Weights = (double *)malloc(getTotalDimension(conv1WeightsDim) * sizeof(double));
     double *conv2Weights = (double *)malloc(getTotalDimension(conv2WeightsDim) * sizeof(double));
     double *conv3Weights = (double *)malloc(getTotalDimension(conv3WeightsDim) * sizeof(double));
     double *bias1Weights = (double *)malloc(getTotalDimension(bias1Dim) * sizeof(double));
     double *bias2Weights = (double *)malloc(getTotalDimension(bias2Dim) * sizeof(double));
     double *bias3Weights = (double *)malloc(getTotalDimension(bias3Dim) * sizeof(double));
+    */
     cout << "finish allocating conv and bias weights' space" << endl;
     readConvWeights(this->weights[0], conv1Weights); cout << "weight[0]" << endl;
     readConvWeights(this->weights[1], conv2Weights, true); cout << "weight[1]" << endl;
@@ -110,8 +108,9 @@ void SRCNN::generate(string filename)
     {
         for(int j = 0; j < outputWidth; j++)
         {
-            //dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
-            dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
+            //cout << i << " " << j << " fine" << endl;
+            dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
+            //dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
         }
     }
 
