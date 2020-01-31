@@ -1,6 +1,9 @@
 # SRCNN-cpp
 C++ implementation of SRCNN (Super-Resolution Convolutional Neural Network)
 
+# Note
+This project is **incomplete**, and I am still working on this :)
+
 # How to Build and Run
 ```
 $ mkdir build && cd build && cmake .. && make && cd ..

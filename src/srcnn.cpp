@@ -28,13 +28,13 @@ void SRCNN::generate(string filename)
 
     // using bicubic to resize input image
     Mat bicubicTemp;
-    resize(this->downsample, bicubicTemp, Size(), this->scale, this->scale, INTER_CUBIC);
-    this->bicubic = bicubicTemp;
+    resize(this->downsample, this->bicubic, Size(), this->scale, this->scale, INTER_CUBIC);
+    //this->bicubic = bicubicTemp;
 
     // prepare input, output, and conv data
     cout << "prepare data" << endl;
-    int inputWidth = bicubicTemp.cols;
-    int inputHeight = bicubicTemp.rows;
+    int inputWidth = this->bicubic.cols;
+    int inputHeight = this->bicubic.rows;
     cout << "input width height " << inputWidth << " " << inputHeight << endl;
     ImageDim inputDim = make_tuple(1, inputHeight, inputWidth);
     double *input = new double[inputHeight * inputWidth];
@@ -53,7 +53,7 @@ void SRCNN::generate(string filename)
     {
         for(int j = 0; j < inputWidth; j++)
         {
-            input[(i * inputWidth) + j] = bicubicTemp.at<uchar>(i, j) / 255.0;
+            input[(i * inputWidth) + j] = this->bicubic.at<uchar>(i, j) / 255.0;
             dst[(i * inputWidth) + j] = 0;
         }
     }
@@ -74,35 +74,49 @@ void SRCNN::generate(string filename)
     double *conv3Weights = new double[getTotalDimension(conv3WeightsDim)];
     double *bias1Weights = new double[getTotalDimension(bias1Dim)];
     double *bias2Weights = new double[getTotalDimension(bias2Dim)];
-    double *bias3Weights = new double[getTotalDimension(bias3Dim)];
-    /*
-    double *conv1Weights = (double *)malloc(getTotalDimension(conv1WeightsDim) * sizeof(double));
-    double *conv2Weights = (double *)malloc(getTotalDimension(conv2WeightsDim) * sizeof(double));
-    double *conv3Weights = (double *)malloc(getTotalDimension(conv3WeightsDim) * sizeof(double));
-    double *bias1Weights = (double *)malloc(getTotalDimension(bias1Dim) * sizeof(double));
-    double *bias2Weights = (double *)malloc(getTotalDimension(bias2Dim) * sizeof(double));
-    double *bias3Weights = (double *)malloc(getTotalDimension(bias3Dim) * sizeof(double));
-    */
+    double *bias3Weights = new double[getTotalDimension(bias3Dim)]; 
     cout << "finish allocating conv and bias weights' space" << endl;
+    /*
     readConvWeights(this->weights[0], conv1Weights); cout << "weight[0]" << endl;
     readConvWeights(this->weights[1], conv2Weights, true); cout << "weight[1]" << endl;
     readConvWeights(this->weights[2], conv3Weights, false, true); cout << "weight[2]" << endl;
     readBiasWeights(this->weights[3], bias1Weights); cout << "weight[3]" << endl;
     readBiasWeights(this->weights[4], bias2Weights); cout << "weight[4]" << endl;
     readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl;
+    */
+    testReadConvWeights(this->weights[0], "myConv1Weight.txt", conv1Weights); cout << "weight[0]" << endl;
+    testReadConvWeights(this->weights[1], "myConv2Weight.txt", conv2Weights, true); cout << "weight[1]" << endl;
+    testReadConvWeights(this->weights[2], "myConv3Weight.txt", conv3Weights, false, true); cout << "weight[2]" << endl;
+    testReadBiasWeights(this->weights[3], "myBias1Weight.txt", bias1Weights); cout << "weight[3]" << endl;
+    testReadBiasWeights(this->weights[4], "myBias2Weight.txt", bias2Weights); cout << "weight[4]" << endl;
+    testReadBiasWeights(this->weights[5], "myBias3Weight.txt", bias3Weights); cout << "weight[5]" << endl;
+
 
     // conv1 (feature extraction)
     cout << "conv1" << endl;
-    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+    //convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+    testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
+        "myConv1Weight.txt", "myBias1Weight.txt");
     activation(conv1Data, conv1Data, conv1Dim, RELU);
+    /*
+    for(int i = 0; i < 1; i++)
+    {
+        Mat conv1(get<1>(conv1Dim), get<2>(conv1Dim), CV_64FC1, conv1Data[i * get<1>(conv1Dim) * get<2>(conv1Dim)]);
+        conv1.convertTo(conv1, CV_8UC1, 255.0);
+        string outputname = "conv1_" + to_string(i) + ".jpg";
+        imwrite(outputname, conv1);
+    }*/
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
+        "myConv2Weight.txt", "myBias2Weight.txt");
     activation(conv2Data, conv2Data, conv2Dim, RELU);
     // conv3 (reconstruction)
     cout << "conv3" << endl;
-    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
-
+    //convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+    testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
+        "myConv3Weight.txt", "myBias3Weight.txt");
     cout << "prepare output" << endl;
     for(int i = 0; i < outputHeight; i++)
     {
@@ -111,13 +125,30 @@ void SRCNN::generate(string filename)
             //cout << i << " " << j << " fine" << endl;
             dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
             //dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
+            if(dst[(i * outputWidth) + j] != 0)
+            {
+                cout << "index " << i << " " << j << " " << conv3Data[(i * outputWidth) + j] << endl;
+            }
         }
     }
 
     // copy to output OpenCV Mat
     cout << "copy to output OpenCV Mat" << endl;
     Mat SRCNN(outputHeight, outputWidth, CV_64FC1, dst);
+    //Mat SRCNN(outputHeight, outputWidth, CV_64FC1, conv3Data);
     this->output = SRCNN;
+
+    delete [] input;
+    delete [] conv1Data;
+    delete [] conv2Data;
+    delete [] conv3Data;
+    delete [] conv1Weights;
+    delete [] conv2Weights;
+    delete [] conv3Weights;
+    delete [] bias1Weights;
+    delete [] bias2Weights;
+    delete [] bias3Weights;
+    //delete [] dst; 
 }
 
 void SRCNN::showOutput()
@@ -283,19 +314,24 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 kernels[(n * kernelHeight * kernelWidth) + 
                                         ((l + kernelHeight) * kernelWidth) + 
                                         (m + kernelWidth)];*/
-                                sum += input[(n * inputHeight * inputWidth) + (y * inputWidth) + x] * 
-                                    kernels[(((n) * kernelHeight + 
+
+                                // sum += input[n][y][x] * kernels[n][l + kernelHeight][m + kernelWidth][k]
+                                int inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
+                                int kernelIdx = (((n) * kernelHeight + 
                                             (l + kernelHeight)) * kernelWidth + 
                                             (m + kernelWidth)) * kernelOutputChannel + 
-                                            k]; // sum += input[n][y][x] * kernels[n][l + kernelHeight][m + kernelWidth][k]
+                                            k;
+                                sum += input[inputIdx] * kernels[kernelIdx]; 
                         }
                     }
 
                     output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
+                    /*
                     if(bias != NULL)
                     {
                         output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += bias[(k * get<1>(biasDim) * get<2>(biasDim))];
-                    } 
+                    }
+                    */ 
                 }
             }
         }
@@ -399,5 +435,189 @@ void SRCNN::readBiasWeights(string filename, double *kernel)
     }
 
     input.close();
+}
+
+void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
+    ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride/* = 1*/,
+    double *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/,
+    string outputConvWeightPath, string outputBiasWeightPath)
+{
+    int kernelInputChannel = get<0>(kernelDim);
+    int kernelHeight = get<1>(kernelDim);
+    int kernelWidth = get<2>(kernelDim);
+    int kernelOutputChannel = get<3>(kernelDim);
+    int kernelHeightSize = kernelHeight / 2;
+    int kernelWidthSize = kernelWidth / 2;
+
+    int inputChannel = get<0>(inputDim);
+    int inputHeight = get<1>(inputDim);
+    int inputWidth = get<2>(inputDim);
+
+    int outputChannel = get<0>(outputDim);
+    int outputHeight = get<1>(outputDim);
+    int outputWidth = get<2>(outputDim);
+
+    /*
+    cout << outputConvWeightPath << endl;
+    ofstream outputConvWeight(outputConvWeightPath);
+    if(!outputConvWeight.is_open())
+    {
+        cout << "conv weight unsuccessful" << endl;
+        exit(1);
+    }
+    cout << outputBiasWeightPath << endl;
+    ofstream outputBiasWeight(outputBiasWeightPath);
+    if(!outputBiasWeight.is_open())
+    {
+        cout << "bias weight unsuccessful" << endl;
+        exit(1);
+    }
+    */
+
+    for(int k = 0; k < outputChannel; k++)
+    {
+        for(int n = 0; n < inputChannel; n++)
+        {
+            for(int i = 0; i < inputHeight; i += stride)
+            {
+                for(int j = 0; j < inputWidth; j += stride)
+                {
+                    double sum = 0.0;
+                    for(int l = -kernelHeightSize; l <= kernelHeightSize; l++)
+                    {
+                        for(int m = -kernelWidthSize; m <= kernelWidthSize; m++)
+                        {
+                            int y = i + l;
+                            int x = j + m;
+
+                            // zero padding
+                            x = x >= 0 ? (x < inputWidth ? x : inputWidth - stride) : 0;
+                            y = y >= 0 ? (y < inputHeight ? y : inputHeight - stride) : 0;
+                        
+                            /*sum += input[(n * inputHeight * inputWidth) + (y * inputWidth) + x] * 
+                                kernels[(n * kernelHeight * kernelWidth) + 
+                                        ((l + kernelHeight) * kernelWidth) + 
+                                        (m + kernelWidth)];*/
+                                int inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
+                                int kernelIdx = (((n) * kernelHeight + 
+                                            (l + kernelHeight)) * kernelWidth + 
+                                            (m + kernelWidth)) * kernelOutputChannel + 
+                                            k;
+                                sum += input[inputIdx] * kernels[kernelIdx]; 
+                                
+                                //outputConvWeight << kernels[kernelIdx] << " ";
+                                
+                        }
+                    }
+
+                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
+                    /*
+                    if(bias != NULL)
+                    {
+                        output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += bias[(k * get<1>(biasDim) * get<2>(biasDim))];
+                    }
+                    */ 
+                }
+            }
+        }
+
+        if(bias != NULL)
+        {
+            for(int i = 0; i < outputHeight; i++)
+            {
+                for(int j = 0; j < outputWidth; j++)
+                {
+                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += bias[(k * get<1>(biasDim) * get<2>(biasDim))];
+                    //outputBiasWeight << bias[(k * get<1>(biasDim) * get<2>(biasDim))] << " ";
+                }
+            }
+        }
+    }
+
+    /*
+    outputConvWeight.close();
+    outputBiasWeight.close();
+    */
+}
+
+void SRCNN::testReadConvWeights(string filename, string outputfile, double *kernel, bool special/* = false*/, bool isReverse/* = false*/)
+{
+    ifstream input(filename);
+    if(!input.is_open())
+    {
+        cerr << "file " << filename << " opened unsuccessfully" << endl;
+        exit(1);
+    }
+
+    ofstream output(outputfile);
+    if(!output.is_open())
+    {
+        cerr << "file " << output << " opened unsuccessfully" << endl;
+        exit(1);
+    }
+
+    int currentChannels = 1;
+    if(special)
+    {
+        input >> currentChannels;
+    }
+
+    int kernelSizeSquare;
+    input >> kernelSizeSquare;
+
+    int nextChannels = 1;
+    input >> nextChannels;
+
+    if(isReverse)
+    {
+        for(int i = 0; i < currentChannels * kernelSizeSquare * nextChannels; i++)
+        {
+            input >> kernel[i];
+            output << kernel[i] << " ";
+        }
+    }
+    else
+    {
+        for(int i = 0; i < currentChannels * kernelSizeSquare * nextChannels; i++)
+        {
+            input >> kernel[i];
+            output << kernel[i] << " ";
+        }
+    }
+
+    input.close();
+    output.close();
+}
+
+void SRCNN::testReadBiasWeights(string filename, string outputfile, double *kernel)
+{
+    ifstream input(filename);
+    if(!input.is_open())
+    {
+        cerr << "file " << filename << " opened unsuccessfully" << endl;
+        exit(1);
+    }
+
+    ofstream output(outputfile);
+    if(!output.is_open())
+    {
+        cerr << "file " << output << " opened unsuccessfully" << endl;
+        exit(1);
+    }
+
+    int nextChannels;
+    input >> nextChannels;
+
+    int kernelSizeSquare;
+    input >> kernelSizeSquare;
+
+    for(int i = 0; i < nextChannels * kernelSizeSquare; i++)
+    {
+        input >> kernel[i];
+        output << kernel[i] << " ";
+    }
+
+    input.close();
+    output.close();
 }
 

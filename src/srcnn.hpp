@@ -60,6 +60,14 @@ private:
 
     void readConvWeights(std::string filename, double *weights, bool special = false, bool isReverse = false);
     void readBiasWeights(std::string filename, double *weights);
+
+    // unit test functions
+    void testConvolution(double *input, double *output, ImageDim inputDim,
+        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
+        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), 
+        std::string outputConvWeightPath = NULL, std::string outputBiasWeightPath = NULL);
+    void testReadConvWeights(std::string filename, std::string outputfile, double *weights, bool special = false, bool isReverse = false);
+    void testReadBiasWeights(std::string filename, std::string outputfile, double *weights);
 };
 
 #endif
