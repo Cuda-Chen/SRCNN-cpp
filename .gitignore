@@ -53,4 +53,9 @@ _deps
 [Bb]uild/
 
 # test weight files
-*.txt
+myConv1Weight.txt
+myConv2Weight.txt
+myConv3Weight.txt
+myBias1Weight.txt
+myBias2Weight.txt
+myBias3Weight.txt

@@ -94,9 +94,9 @@ void SRCNN::generate(string filename)
 
     // conv1 (feature extraction)
     cout << "conv1" << endl;
-    //convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
-    testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
-        "myConv1Weight.txt", "myBias1Weight.txt");
+    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+    /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
+        "myConv1Weight.txt", "myBias1Weight.txt");*/
     activation(conv1Data, conv1Data, conv1Dim, RELU);
     /*
     for(int i = 0; i < 1; i++)
@@ -108,15 +108,15 @@ void SRCNN::generate(string filename)
     }*/
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
-    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
-    testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
-        "myConv2Weight.txt", "myBias2Weight.txt");
+    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
+        "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
     // conv3 (reconstruction)
     cout << "conv3" << endl;
-    //convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
-    testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
-        "myConv3Weight.txt", "myBias3Weight.txt");
+    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+    /*testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
+        "myConv3Weight.txt", "myBias3Weight.txt");*/
     cout << "prepare output" << endl;
     for(int i = 0; i < outputHeight; i++)
     {
