@@ -51,3 +51,6 @@ _deps
 
 # build folders
 [Bb]uild/
+
+# test weight files
+*.txt

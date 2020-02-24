@@ -552,7 +552,7 @@ void SRCNN::testReadConvWeights(string filename, string outputfile, double *kern
     ofstream output(outputfile);
     if(!output.is_open())
     {
-        cerr << "file " << output << " opened unsuccessfully" << endl;
+        cerr << "file " << outputfile << " opened unsuccessfully" << endl;
         exit(1);
     }
 
@@ -601,7 +601,7 @@ void SRCNN::testReadBiasWeights(string filename, string outputfile, double *kern
     ofstream output(outputfile);
     if(!output.is_open())
     {
-        cerr << "file " << output << " opened unsuccessfully" << endl;
+        cerr << "file " << outputfile << " opened unsuccessfully" << endl;
         exit(1);
     }
 
