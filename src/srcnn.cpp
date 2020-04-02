@@ -318,8 +318,8 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 // sum += input[n][y][x] * kernels[n][l + kernelHeight][m + kernelWidth][k]
                                 int inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
                                 int kernelIdx = (((n) * kernelHeight + 
-                                            (l + kernelHeight)) * kernelWidth + 
-                                            (m + kernelWidth)) * kernelOutputChannel + 
+                                            (l + kernelHeightSize)) * kernelWidth + 
+                                            (m + kernelWidthSize)) * kernelOutputChannel + 
                                             k;
                                 sum += input[inputIdx] * kernels[kernelIdx]; 
                         }
