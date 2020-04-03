@@ -216,7 +216,7 @@ void SRCNN::checkWeightStatus()
     }
 }
 
-void SRCNN::testConv(string filename)
+void SRCNN::testImageConv(string filename)
 {
     Mat gray = imread(filename, IMREAD_GRAYSCALE);
     imshow("gray", gray);
@@ -280,6 +280,110 @@ void SRCNN::testConv(string filename)
     //Mat result1(height, width, CV_64FC1, output);
     imshow("gaussian 1", result1);
     waitKey(0);
+}
+
+// http://cs231n.github.io/convolutional-networks/
+void SRCNN::testConv()
+{
+    // input
+    ImageDim inputDim = make_tuple(3, 5, 5);
+    double input[] = 
+    {/* channel 0 */
+     2, 1, 1, 1, 2,
+     1, 2, 0, 2, 2,
+     1, 0, 0, 1, 0,
+     1, 0, 2, 0, 1,
+     0, 1, 2, 2, 1,
+     /* channel 1 */
+     1, 2, 1, 2, 1,
+     2, 2, 0, 2, 0,
+     1, 0, 2, 0, 1,
+     0, 0, 2, 0, 2,
+     1, 2, 0, 2, 0,
+     /* channel 2*/
+     0, 0, 0, 0, 1,
+     2, 1, 2, 2, 1,
+     1, 0, 1, 1, 2,
+     1, 0, 2, 1, 0,
+     1, 0, 0, 1, 0
+    };
+
+    // output
+    int outputDepth = 2;
+    int outputHeight = 3;
+    int outputWidth = 3;
+    ImageDim outputDim = make_tuple(2, 3, 3);
+    double *output = new double[getTotalDimension(outputDim)];
+    for(int i = 0; i < outputDepth; i++)
+    {
+        for(int j = 0; j < outputHeight; j++)
+        {
+            for(int k = 0; k < outputWidth; k++)
+            {
+                output[(i * outputHeight + j) * outputWidth + k] = 0;
+            }
+        }
+    }
+
+    // kernel
+    KernelDim filtersDim = make_tuple(3, 3, 3, 2);
+    double filters[] = 
+    {/* filter w0 */
+     /* channel 0 */
+     1, 1, -1,
+     1, -1, -1,
+     -1, 0, 0,
+     /* channel 1 */
+     1, 0, -1,
+     1, 1, 0,
+     1, 1, -1,
+     /* channel 2 */
+     1, 1, 1,
+     0, -1, 1,
+     1, 0, 0,
+
+     /* filter w1 */
+     /* channel 0 */
+     0, -1, 0,
+     0, 1, 0,
+     1, -1, 1,
+     /* channel 1 */
+      1, 0, -1,
+     -1, -1, 1,
+     0, -1, 0,
+     /* channel 2 */
+     0, 0, -1,
+     -1, -1, -1,
+     -1, 0, 0
+    };
+
+    // bias
+    ImageDim biasesDim = make_tuple(2, 1, 1);
+    double biases[] = 
+    {/* b0 */
+     1,
+     /* b1 */
+     0
+    };
+
+    // operate convolution on test data
+    convolution(input, output, inputDim,
+                outputDim, filters, filtersDim, 1,
+                biases, biasesDim);
+
+    // print the convoluted result
+    for(int i = 0; i < get<0>(outputDim); i++)
+    {
+        for(int j = 0; j < get<1>(outputDim); j++)
+        {
+            for(int k = 0; k < get<2>(outputDim); k++)
+            {
+                cout << output[((i) * outputHeight + j) * outputWidth + k] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
 }
 
 // standard convolution
