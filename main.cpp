@@ -19,7 +19,8 @@ int main(int argc, char **argv)
     srcnn.generate(filename);
     srcnn.showOutput();
     */
-    srcnn.testConv();
+    //srcnn.testConv();
+    srcnn.testImageConv(filename);
     //srcnn.generate(filename);
     //srcnn.showOutput();
 
