@@ -439,18 +439,24 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 // sum += input[n][y][x] * kernels[n][l + kernelHeightSize][m + kernelWidthSize][k]
                                 // zero padding
                                 double data;
+                                int inputIdx = -1;
                                 if(x < 0 || y < 0 || x >= inputWidth || y >= inputHeight)
                                 {
                                     data = 0;
+                                } 
+                                else {
+                                    inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
+                                    data = input[inputIdx];
                                 }
-                                int inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
                                 int kernelIdx = (((n) * kernelHeight + 
                                             (l + kernelHeightSize)) * kernelWidth + 
                                             (m + kernelWidthSize)) * kernelOutputChannel + 
                                             k;
-                                data = input[inputIdx];
-                                /*
-                                cout << "input[" << inputIdx << 
+                                vector<int> vec{n, x, y, n, l + kernelHeightSize, m + kernelWidthSize, k};
+                                for(const int &elem: vec)
+                                { cout << elem << " "; }
+                                cout << endl;
+                                /*cout << "input[" << inputIdx << 
                                         "] = " << input[inputIdx] << 
                                         " kernels[" << kernelIdx <<
                                         "] = " << kernels[kernelIdx] << endl;*/
@@ -458,6 +464,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 sum += data * kernels[kernelIdx]; 
                         }
                     }
+                    cout << "====" << endl;
 
                     output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
                     /*
