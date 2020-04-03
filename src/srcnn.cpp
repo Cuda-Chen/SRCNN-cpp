@@ -97,21 +97,33 @@ void SRCNN::generate(string filename)
     convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
     /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
         "myConv1Weight.txt", "myBias1Weight.txt");*/
-    activation(conv1Data, conv1Data, conv1Dim, RELU);
-    /*
-    for(int i = 0; i < 1; i++)
+    activation(conv1Data, conv1Data, conv1Dim, RELU); 
+    /* 
+    for(int i = 0; i < 64; i++)
     {
         Mat conv1(get<1>(conv1Dim), get<2>(conv1Dim), CV_64FC1, conv1Data[i * get<1>(conv1Dim) * get<2>(conv1Dim)]);
         conv1.convertTo(conv1, CV_8UC1, 255.0);
         string outputname = "conv1_" + to_string(i) + ".jpg";
         imwrite(outputname, conv1);
-    }*/
+    }
+    */
+
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
     convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
+    /*
+    for(int i = 0; i < 32; i++)
+    {
+        Mat conv2(get<1>(conv2Dim), get<2>(conv2Dim), CV_64FC1, conv2Data[i * get<1>(conv2Dim) * get<2>(conv2Dim)]);
+        conv2.convertTo(conv2, CV_8UC1, 255.0);
+        string outputname = "conv2_" + to_string(i) + ".jpg";
+        imwrite(outputname, conv2);
+    }
+    */
+
     // conv3 (reconstruction)
     cout << "conv3" << endl;
     convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
