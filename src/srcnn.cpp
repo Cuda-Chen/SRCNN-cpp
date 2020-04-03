@@ -455,6 +455,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 vector<int> vec{n, x, y, n, l + kernelHeightSize, m + kernelWidthSize, k};
                                 for(const int &elem: vec)
                                 { cout << elem << " "; }
+                                cout << "|" << data << " " << kernels[kernelIdx];
                                 cout << endl;
                                 /*cout << "input[" << inputIdx << 
                                         "] = " << input[inputIdx] << 
