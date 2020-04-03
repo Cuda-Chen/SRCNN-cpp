@@ -59,3 +59,6 @@ myConv3Weight.txt
 myBias1Weight.txt
 myBias2Weight.txt
 myBias3Weight.txt
+
+# test output images
+*.jpg

@@ -422,9 +422,9 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                             int y = i + l;
                             int x = j + m;
 
-                            // valid padding
-                            x = x >= 0 ? (x < inputWidth ? x : inputWidth - stride) : 0;
-                            y = y >= 0 ? (y < inputHeight ? y : inputHeight - stride) : 0;
+                            // mirrow padding
+                            /*x = x >= 0 ? (x < inputWidth ? x : inputWidth - stride) : 0;
+                            y = y >= 0 ? (y < inputHeight ? y : inputHeight - stride) : 0;*/
                         
                             /*sum += input[(n * inputHeight * inputWidth) + (y * inputWidth) + x] * 
                                 kernels[(n * kernelHeight * kernelWidth) + 
@@ -437,19 +437,25 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 */
 
                                 // sum += input[n][y][x] * kernels[n][l + kernelHeightSize][m + kernelWidthSize][k]
+                                // zero padding
+                                double data;
+                                if(x < 0 || y < 0 || x >= inputWidth || y >= inputHeight)
+                                {
+                                    data = 0;
+                                }
                                 int inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
                                 int kernelIdx = (((n) * kernelHeight + 
                                             (l + kernelHeightSize)) * kernelWidth + 
                                             (m + kernelWidthSize)) * kernelOutputChannel + 
                                             k;
-
+                                data = input[inputIdx];
                                 /*
                                 cout << "input[" << inputIdx << 
                                         "] = " << input[inputIdx] << 
                                         " kernels[" << kernelIdx <<
                                         "] = " << kernels[kernelIdx] << endl;*/
 
-                                sum += input[inputIdx] * kernels[kernelIdx]; 
+                                sum += data * kernels[kernelIdx]; 
                         }
                     }
 
