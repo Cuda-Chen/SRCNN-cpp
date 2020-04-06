@@ -242,7 +242,7 @@ void SRCNN::testImageConv(string filename)
 
     // Conv test
     double *kernel = new double[kernelHeight * kernelWidth];
-    KernelDim kernelDim = make_tuple(1, kernelHeight, kernelWidth, 1);
+    KernelDim kernelDim = make_tuple(1, 1, kernelHeight, kernelWidth);
 
     for(int i = 0; i < height; i++)
     {
