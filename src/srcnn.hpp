@@ -8,7 +8,7 @@
 #include "opencv2/opencv.hpp"
 
 typedef std::tuple<int, int, int> ImageDim; // CHW (# channel, # height, # width)
-typedef std::tuple<int, int, int, int> KernelDim; // (# inputChannel, # height, # width, # outputChannel)
+typedef std::tuple<int, int, int, int> KernelDim; // NCHW (# outputChannel, # inputChannel, # height, # width)
 
 typedef enum
 {

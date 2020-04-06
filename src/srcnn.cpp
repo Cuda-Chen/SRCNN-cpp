@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <string>
 #include <tuple>
 #include <fstream>
@@ -289,23 +290,23 @@ void SRCNN::testConv()
     ImageDim inputDim = make_tuple(3, 5, 5);
     double input[] = 
     {/* channel 0 */
-     2, 1, 1, 1, 2,
-     1, 2, 0, 2, 2,
-     1, 0, 0, 1, 0,
-     1, 0, 2, 0, 1,
-     0, 1, 2, 2, 1,
+     1, 2, 0, 0, 1,
+     0, 0, 1, 2, 1,
+     0, 0, 1, 1, 1,
+     0, 1, 0, 1, 0,
+     1, 2, 1, 1, 1,
      /* channel 1 */
-     1, 2, 1, 2, 1,
-     2, 2, 0, 2, 0,
-     1, 0, 2, 0, 1,
-     0, 0, 2, 0, 2,
-     1, 2, 0, 2, 0,
+     1, 1, 2, 1, 2,
+     2, 0, 1, 1, 1,
+     2, 0, 2, 2, 0,
+     2, 2, 2, 1, 2,
+     2, 1, 2, 0, 2,
      /* channel 2*/
-     0, 0, 0, 0, 1,
-     2, 1, 2, 2, 1,
-     1, 0, 1, 1, 2,
-     1, 0, 2, 1, 0,
-     1, 0, 0, 1, 0
+     1, 2, 1, 1, 2,
+     2, 2, 2, 1, 1,
+     1, 0, 1, 0, 2,
+     2, 1, 1, 1, 1,
+     1, 2, 2, 0, 2
     };
 
     // output
@@ -326,35 +327,35 @@ void SRCNN::testConv()
     }
 
     // kernel
-    KernelDim filtersDim = make_tuple(3, 3, 3, 2);
+    KernelDim filtersDim = make_tuple(2, 3, 3, 3);
     double filters[] = 
     {/* filter w0 */
      /* channel 0 */
-     1, 1, -1,
-     1, -1, -1,
-     -1, 0, 0,
+     0, -1, 0,
+     -1, 1, 0,
+     0, -1, -1,
      /* channel 1 */
-     1, 0, -1,
-     1, 1, 0,
-     1, 1, -1,
+     -1, 1, 0,
+     -1, -1, 1,
+     1, -1, 1,
      /* channel 2 */
-     1, 1, 1,
-     0, -1, 1,
+     0, 0, 1,
      1, 0, 0,
+     -1, 1, 1,
 
      /* filter w1 */
      /* channel 0 */
-     0, -1, 0,
-     0, 1, 0,
      1, -1, 1,
+     0, -1, 1,
+     1, 0, 1,
      /* channel 1 */
-      1, 0, -1,
-     -1, -1, 1,
+     0, -1, -1,
+     1, 1, 1,
      0, -1, 0,
      /* channel 2 */
-     0, 0, -1,
+     -1, 0, -1,
      -1, -1, -1,
-     -1, 0, 0
+     0, 0, 1
     };
 
     // bias
@@ -391,10 +392,10 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride/* = 1*/,
     double *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/)
 {
-    int kernelInputChannel = get<0>(kernelDim);
-    int kernelHeight = get<1>(kernelDim);
-    int kernelWidth = get<2>(kernelDim);
-    int kernelOutputChannel = get<3>(kernelDim);
+    int kernelOutputChannel = get<0>(kernelDim);
+    int kernelInputChannel = get<1>(kernelDim);
+    int kernelHeight = get<2>(kernelDim);
+    int kernelWidth = get<3>(kernelDim);
     int kernelHeightSize = kernelHeight / 2;
     int kernelWidthSize = kernelWidth / 2;
 
@@ -436,7 +437,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 cout << "kernels[" << n << "][" << l + kernelHeightSize << "][" << m + kernelWidthSize << "][" << k << "] ";
                                 */
 
-                                // sum += input[n][y][x] * kernels[n][l + kernelHeightSize][m + kernelWidthSize][k]
+                                // sum += input[n][y][x] * kernels[k][n][l + kernelHeightSize][m + kernelWidthSize]
                                 // zero padding
                                 double data;
                                 int inputIdx = -1;
@@ -448,14 +449,15 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                     inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
                                     data = input[inputIdx];
                                 }
-                                int kernelIdx = (((n) * kernelHeight + 
+                                int kernelIdx = ((k * kernelInputChannel + 
+                                             n) * kernelHeight + 
                                             (l + kernelHeightSize)) * kernelWidth + 
-                                            (m + kernelWidthSize)) * kernelOutputChannel + 
-                                            k;
+                                            (m + kernelWidthSize);
                                 vector<int> vec{n, x, y, n, l + kernelHeightSize, m + kernelWidthSize, k};
                                 for(const int &elem: vec)
                                 { cout << elem << " "; }
-                                cout << "|" << data << " " << kernels[kernelIdx];
+                                cout << setw(4) << "|" << inputIdx << " " << kernelIdx
+                                     << setw(4) << "|" << data << " " << kernels[kernelIdx];
                                 cout << endl;
                                 /*cout << "input[" << inputIdx << 
                                         "] = " << input[inputIdx] << 
