@@ -14,3 +14,7 @@ $ SRCNN_cpp <input image path>
 This implementation uses 9-5-5 architecture.
 - 9-5-5 means f1 = 9, f2 = 5, f3 = 5.
 - You can see the explanation in [Section 4.3.2 in SRCNN paper](https://arxiv.org/pdf/1501.00092.pdf).
+
+# TODO
+- [ ] `im2col`
+- [ ] validate convolution using [this image](https://zhuanlan.zhihu.com/p/63974249)
