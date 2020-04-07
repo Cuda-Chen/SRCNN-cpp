@@ -407,6 +407,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     int outputHeight = get<1>(outputDim);
     int outputWidth = get<2>(outputDim);
 
+    
     for(int k = 0; k < outputChannel; k++)
     {
         for(int n = 0; n < inputChannel; n++)
@@ -416,6 +417,8 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                 for(int j = 0; j < inputWidth; j += stride)
                 {
                     double sum = 0.0;
+                    vector<double> dataArray;
+                    vector<double> kernelArray;
                     for(int l = -kernelHeightSize; l <= kernelHeightSize; l++)
                     {
                         for(int m = -kernelWidthSize; m <= kernelWidthSize; m++)
@@ -425,17 +428,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
 
                             // mirrow padding
                             /*x = x >= 0 ? (x < inputWidth ? x : inputWidth - stride) : 0;
-                            y = y >= 0 ? (y < inputHeight ? y : inputHeight - stride) : 0;*/
-                        
-                            /*sum += input[(n * inputHeight * inputWidth) + (y * inputWidth) + x] * 
-                                kernels[(n * kernelHeight * kernelWidth) + 
-                                        ((l + kernelHeight) * kernelWidth) + 
-                                        (m + kernelWidth)];*/
-
-                                /*
-                                cout << "input[" << n << "][" << y << "][" << x << "] ";
-                                cout << "kernels[" << n << "][" << l + kernelHeightSize << "][" << m + kernelWidthSize << "][" << k << "] ";
-                                */
+                            y = y >= 0 ? (y < inputHeight ? y : inputHeight - stride) : 0;*/ 
 
                                 // sum += input[n][y][x] * kernels[k][n][l + kernelHeightSize][m + kernelWidthSize]
                                 // zero padding
@@ -458,24 +451,21 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                 { cout << elem << " "; }
                                 cout << setw(4) << "|" << inputIdx << " " << kernelIdx
                                      << setw(4) << "|" << data << " " << kernels[kernelIdx];
-                                cout << endl;
-                                /*cout << "input[" << inputIdx << 
-                                        "] = " << input[inputIdx] << 
-                                        " kernels[" << kernelIdx <<
-                                        "] = " << kernels[kernelIdx] << endl;*/
+                                cout << endl << "++++" << endl;
 
-                                sum += data * kernels[kernelIdx]; 
+                                dataArray.push_back(data);
+                                kernelArray.push_back(kernels[kernelIdx]);
+
+                                //sum += data * kernels[kernelIdx]; 
                         }
                     }
-                    cout << "====" << endl;
+                    for(const double &elem: dataArray) { cout << elem << " "; }
+                    cout << endl << "----" << endl;
+                    for(const double &elem: kernelArray) { cout << elem << " "; }
+                    cout << dataArray.size() << " " << kernelArray.size();
+                    cout << endl << "====" << endl;
 
-                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
-                    /*
-                    if(bias != NULL)
-                    {
-                        output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += bias[(k * get<1>(biasDim) * get<2>(biasDim))];
-                    }
-                    */ 
+                    //output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
                 }
             }
         }
