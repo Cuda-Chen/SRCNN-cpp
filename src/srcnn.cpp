@@ -417,8 +417,9 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                 for(int j = 0; j < inputWidth; j += stride)
                 {
                     double sum = 0.0;
-                    vector<double> dataArray;
-                    vector<double> kernelArray;
+                    double dataArray[kernelHeight * kernelWidth];
+                    double kernelArray[kernelHeight * kernelWidth];
+                    int counter = 0;
                     for(int l = -kernelHeightSize; l <= kernelHeightSize; l++)
                     {
                         for(int m = -kernelWidthSize; m <= kernelWidthSize; m++)
@@ -453,8 +454,9 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                                      << setw(4) << "|" << data << " " << kernels[kernelIdx];
                                 cout << endl << "++++" << endl;
 
-                                dataArray.push_back(data);
-                                kernelArray.push_back(kernels[kernelIdx]);
+                                dataArray[counter] = data;
+                                kernelArray[counter] = kernels[kernelIdx];
+                                counter++;
 
                                 //sum += data * kernels[kernelIdx]; 
                         }
@@ -462,7 +464,6 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
                     for(const double &elem: dataArray) { cout << elem << " "; }
                     cout << endl << "----" << endl;
                     for(const double &elem: kernelArray) { cout << elem << " "; }
-                    cout << dataArray.size() << " " << kernelArray.size();
                     cout << endl << "====" << endl;
 
                     //output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
