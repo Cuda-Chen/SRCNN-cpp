@@ -51,6 +51,14 @@ private:
     void convolution(double *input, double *output, ImageDim inputDim,
         ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
         double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
+    void im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
+                int stride, int pad, double *data_col);
+    void col2im(double *data_col, ImageDim imageDim, kernelDim kernelDim,
+                int stride, int pad, double *data_im);
+    double im2colGetPixel(double *im, ImageDim imageDim, 
+                          int row, int col, int channel, int pad);
+    double col2imAddPixel(double *im, ImageDim imageDim,
+                          int row, int col, int channel, int pad, double value);  
     void activation(double *input, double *output, ImageDim inputDim, 
         ACTIVATION activationType);
 

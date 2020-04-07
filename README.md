@@ -18,3 +18,4 @@ This implementation uses 9-5-5 architecture.
 # TODO
 - [ ] `im2col`
 - [ ] validate convolution using [this image](https://zhuanlan.zhihu.com/p/63974249)
+- [ ] padding feature
