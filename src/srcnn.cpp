@@ -484,6 +484,22 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     }
 }
 
+void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
+                   int stride, int pad, double *data_col)
+{}
+
+void SRCNN::col2im(double *data_col, ImageDim imageDim, kernelDim kernelDim,
+                   int stride, int pad, double *data_im)
+{}
+
+double SRCNN::im2colGetPixel(double *im, ImageDim imageDim, 
+                             int row, int col, int channel, int pad)
+{}
+
+double SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
+                             int row, int col, int channel, int pad, double value)
+{}
+
 void SRCNN::activation(double *input, double *output, ImageDim inputDim, ACTIVATION activationType)
 {
     switch(activationType)
