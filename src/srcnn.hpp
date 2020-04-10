@@ -53,12 +53,14 @@ private:
         double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
     void im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
                 int stride, int pad, double *data_col);
-    void col2im(double *data_col, ImageDim imageDim, kernelDim kernelDim,
+    void col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
                 int stride, int pad, double *data_im);
     double im2colGetPixel(double *im, ImageDim imageDim, 
                           int row, int col, int channel, int pad);
-    double col2imAddPixel(double *im, ImageDim imageDim,
-                          int row, int col, int channel, int pad, double value);  
+    void col2imAddPixel(double *im, ImageDim imageDim,
+                        int row, int col, int channel, int pad, double value);  
+    void naiveGEMM(double *data_col, double *kernel_col, int col_size);
+    void addBias(double *data_col, double *bias_col, int col_size); 
     void activation(double *input, double *output, ImageDim inputDim, 
         ACTIVATION activationType);
 

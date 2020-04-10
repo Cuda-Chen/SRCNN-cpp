@@ -515,8 +515,8 @@ void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
     }
 }
 
-void col2im(double *data_col, ImageDim imageDim, kernelDim kernelDim,
-                int stride, int pad, double *data_im);
+void col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
+                int stride, int pad, double *data_im)
 {
     int imageHeight = get<1>(imageDim);
     int imageWidth = get<2>(imageDim);
@@ -565,9 +565,10 @@ double SRCNN::im2colGetPixel(double *im, ImageDim imageDim,
     return im[col + width * (row + height * channel)];
 }
 
-double SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
-                             int row, int col, int channel, int pad, double value)
-{   int height = get<1>(imageDim);
+void SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
+                           int row, int col, int channel, int pad, double value)
+{   
+    int height = get<1>(imageDim);
     int width = get<2>(imageDim);
 
     row -= pad;
@@ -580,6 +581,22 @@ double SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
     }
 
     im[col + width * (row + height * channel)] += value;
+}
+
+void SRCNN::naiveGEMM(double *data_col, double *kernel_col, int col_size)
+{
+    for(int i = 0; i < col_size; i++)
+    {
+        data_col[i] = data_col[i] * kernel_col[i];
+    }
+}
+
+void SRCNN::addBias(double *data_col, double *bias_col, int col_size)
+{
+    for(int i = 0; i < col_size; i++)
+    {
+        data_col[i] += bias_col[i];
+    }
 }
 
 void SRCNN::activation(double *input, double *output, ImageDim inputDim, ACTIVATION activationType)
