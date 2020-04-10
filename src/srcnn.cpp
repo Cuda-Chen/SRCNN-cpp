@@ -518,7 +518,33 @@ void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
 void col2im(double *data_col, ImageDim imageDim, kernelDim kernelDim,
                 int stride, int pad, double *data_im);
 {
-    
+    int imageHeight = get<1>(imageDim);
+    int imageWidth = get<2>(imageDim);
+    int kernelHeight = get<2>(kernelDim);
+    int kernelWidth = get<3>(kernelDim);
+    int col_height = (imageHeight + 2 * pad - kernelHeight) / stride + 1;
+    int col_width = (imageWidth + 2 * pad - kernelWidth) / stride + 1;
+    int imageChannel = get<1>(imageDim);
+    int col_channel = imageChannel * kernelHeight * kernelWidth;
+
+    for(int c = 0; c < col_channel; c++)
+    {
+        int w_offset = c % kernelWidth;
+        int h_offset = (c / kernelWidth) % kernelHeight;
+        int c_im = c / kernelWidth / kernelHeight;
+        for(int h = 0; h < col_height; h++)
+        {
+            for(int w = 0; w < col_width; w++)
+            {
+                int im_row = h_offset + h * stride;
+                int im_col = w_offset + w * stride;
+                int col_idx = (c * col_height + h) * col_width + w;
+                double value = data_col[col_idx];
+                col2imAddPixel(data_im, imageDim, im_row, im_col,
+                               c_im, pad, value);
+            }
+        }
+    }
 }
 
 double SRCNN::im2colGetPixel(double *im, ImageDim imageDim, 
@@ -540,8 +566,21 @@ double SRCNN::im2colGetPixel(double *im, ImageDim imageDim,
 }
 
 double SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
-                             int row, int col, int depth, int pad, double value)
-{}
+                             int row, int col, int channel, int pad, double value)
+{   int height = get<1>(imageDim);
+    int width = get<2>(imageDim);
+
+    row -= pad;
+    col -= pad;
+
+    // zero padding
+    if(row < 0 || col < 0 || row >= height || col >= width)
+    {
+        return;
+    }
+
+    im[col + width * (row + height * channel)] += value;
+}
 
 void SRCNN::activation(double *input, double *output, ImageDim inputDim, ACTIVATION activationType)
 {
