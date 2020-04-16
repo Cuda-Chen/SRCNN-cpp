@@ -515,7 +515,7 @@ void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
     }
 }
 
-void col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
+void SRCNN::col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
                 int stride, int pad, double *data_im)
 {
     int imageHeight = get<1>(imageDim);
@@ -870,4 +870,3 @@ void SRCNN::testReadBiasWeights(string filename, string outputfile, double *kern
     input.close();
     output.close();
 }
-

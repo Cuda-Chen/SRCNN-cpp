@@ -29,6 +29,7 @@ public:
     void checkWeightStatus();
     void testImageConv(std::string filename);
     void testConv();
+
 private:
     int scale = 2;
     cv::Mat img;
