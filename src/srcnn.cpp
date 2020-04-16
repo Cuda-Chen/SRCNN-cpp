@@ -1,3 +1,4 @@
+#include <iostream>
 #include <iomanip>
 #include <string>
 #include <tuple>
@@ -236,8 +237,8 @@ void SRCNN::testImageConv(string filename)
     ImageDim outputDim = make_tuple(1, height, width);
     unsigned char *dst = new unsigned char[height * width];
 
-    int kernelWidth = 9;
-    int kernelHeight = 9;
+    int kernelWidth = 3;
+    int kernelHeight = 3;
     double sigma = 3.0;
 
     // Conv test
@@ -407,81 +408,28 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     int outputHeight = get<1>(outputDim);
     int outputWidth = get<2>(outputDim);
 
-    
-    for(int k = 0; k < outputChannel; k++)
+    int colDataSize = kernelInputChannel * kernelHeight * kernelWidth;
+    double *colData = new double[colDataSize];
+    double *kernelColData = new double[colDataSize];
+    int padding = kernelHeightSize; // temp setting, may be changed in the future
+
+    for(int i = 0; i < kernelOutputChannel; i++)
     {
-        for(int n = 0; n < inputChannel; n++)
-        {
-            for(int i = 0; i < inputHeight; i += stride)
-            {
-                for(int j = 0; j < inputWidth; j += stride)
-                {
-                    double sum = 0.0;
-                    double dataArray[kernelHeight * kernelWidth];
-                    double kernelArray[kernelHeight * kernelWidth];
-                    int counter = 0;
-                    for(int l = -kernelHeightSize; l <= kernelHeightSize; l++)
-                    {
-                        for(int m = -kernelWidthSize; m <= kernelWidthSize; m++)
-                        {
-                            int y = i + l;
-                            int x = j + m;
+        im2col(input, inputDim, kernelDim, stride, padding, colData);
+        reshapeKernel(kernels, kernelDim, i, kernelColData);
 
-                            // mirrow padding
-                            /*x = x >= 0 ? (x < inputWidth ? x : inputWidth - stride) : 0;
-                            y = y >= 0 ? (y < inputHeight ? y : inputHeight - stride) : 0;*/ 
+        naiveGEMM(colData, kernelColData, colDataSize);
 
-                                // sum += input[n][y][x] * kernels[k][n][l + kernelHeightSize][m + kernelWidthSize]
-                                // zero padding
-                                double data;
-                                int inputIdx = -1;
-                                if(x < 0 || y < 0 || x >= inputWidth || y >= inputHeight)
-                                {
-                                    data = 0;
-                                } 
-                                else {
-                                    inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
-                                    data = input[inputIdx];
-                                }
-                                int kernelIdx = ((k * kernelInputChannel + 
-                                             n) * kernelHeight + 
-                                            (l + kernelHeightSize)) * kernelWidth + 
-                                            (m + kernelWidthSize);
-                                vector<int> vec{n, x, y, n, l + kernelHeightSize, m + kernelWidthSize, k};
-                                for(const int &elem: vec)
-                                { cout << elem << " "; }
-                                cout << setw(4) << "|" << inputIdx << " " << kernelIdx
-                                     << setw(4) << "|" << data << " " << kernels[kernelIdx];
-                                cout << endl << "++++" << endl;
-
-                                dataArray[counter] = data;
-                                kernelArray[counter] = kernels[kernelIdx];
-                                counter++;
-
-                                //sum += data * kernels[kernelIdx]; 
-                        }
-                    }
-                    for(const double &elem: dataArray) { cout << elem << " "; }
-                    cout << endl << "----" << endl;
-                    for(const double &elem: kernelArray) { cout << elem << " "; }
-                    cout << endl << "====" << endl;
-
-                    //output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
-                }
-            }
-        }
+        col2im(colData, outputDim, kernelDim, stride, padding, output);
 
         if(bias != NULL)
         {
-            for(int i = 0; i < outputHeight; i++)
-            {
-                for(int j = 0; j < outputWidth; j++)
-                {
-                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += bias[(k * get<1>(biasDim) * get<2>(biasDim))];
-                }
-            }
+            addBias(output, outputDim, bias, biasDim);
         }
     }
+
+    delete [] colData;
+    delete [] kernelColData;
 }
 
 void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
@@ -493,7 +441,7 @@ void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
     int kernelWidth = get<3>(kernelDim);
     int col_height = (imageHeight + 2 * pad - kernelHeight) / stride + 1;
     int col_width = (imageWidth + 2 * pad - kernelWidth) / stride + 1;
-    int imageChannel = get<1>(imageDim);
+    int imageChannel = get<0>(imageDim);
     int col_channel = imageChannel * kernelHeight * kernelWidth;
 
     for(int c = 0; c < col_channel; c++)
@@ -524,7 +472,7 @@ void SRCNN::col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
     int kernelWidth = get<3>(kernelDim);
     int col_height = (imageHeight + 2 * pad - kernelHeight) / stride + 1;
     int col_width = (imageWidth + 2 * pad - kernelWidth) / stride + 1;
-    int imageChannel = get<1>(imageDim);
+    int imageChannel = get<0>(imageDim);
     int col_channel = imageChannel * kernelHeight * kernelWidth;
 
     for(int c = 0; c < col_channel; c++)
@@ -591,11 +539,42 @@ void SRCNN::naiveGEMM(double *data_col, double *kernel_col, int col_size)
     }
 }
 
-void SRCNN::addBias(double *data_col, double *bias_col, int col_size)
+void SRCNN::addBias(double *im, ImageDim imDim, double *bias, ImageDim biasDim)
 {
-    for(int i = 0; i < col_size; i++)
+    int imChannel = get<0>(imDim);
+    int imHeight = get<1>(imDim);
+    int imWidth = get<2>(imDim);
+
+    for(int c = 0; c < imChannel; c++)
     {
-        data_col[i] += bias_col[i];
+        for(int h = 0; h < imHeight; h++)
+        {
+            for(int w = 0; w < imWidth; w++)
+            {
+                im[w + imWidth * (h + imHeight * c)] += bias[c];
+            }
+        }
+    }
+}
+
+void SRCNN::reshapeKernel(double *kernels, KernelDim kernelDim, int outputChannel, double *kernels_col)
+{
+    int channels = get<1>(kernelDim);
+    int height = get<2>(kernelDim);
+    int width = get<3>(kernelDim);
+    int col_idx = 0;
+
+    for(int c = 0; c < channels; c++)
+    {
+        for(int h = 0; h < height; h++)
+        {
+            for(int w = 0; w < width; w++)
+            {
+                int idx = w + width * (h + height * (c + channels * outputChannel));
+                kernels_col[col_idx] = kernels[idx];
+                col_idx++;
+            }
+        }
     }
 }
 

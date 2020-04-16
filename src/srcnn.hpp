@@ -61,7 +61,8 @@ private:
     void col2imAddPixel(double *im, ImageDim imageDim,
                         int row, int col, int channel, int pad, double value);  
     void naiveGEMM(double *data_col, double *kernel_col, int col_size);
-    void addBias(double *data_col, double *bias_col, int col_size); 
+    void addBias(double *im, ImageDim imDim, double *bias, ImageDim biasDim);
+    void reshapeKernel(double *kernels, KernelDim kernelDim, int outputChannel, double *kernels_col); 
     void activation(double *input, double *output, ImageDim inputDim, 
         ACTIVATION activationType);
 
