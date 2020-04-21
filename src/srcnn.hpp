@@ -28,7 +28,8 @@ public:
     // Unit test functions, do not use them.
     void checkWeightStatus();
     void testImageConv(std::string filename);
-    void testConv();
+    void testConv1Channel();
+    void testConv3Channels();
 
 private:
     int scale = 2;

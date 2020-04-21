@@ -284,8 +284,12 @@ void SRCNN::testImageConv(string filename)
     waitKey(0);
 }
 
+void SRCNN::testConv1Channel()
+{
+}
+
 // http://cs231n.github.io/convolutional-networks/
-void SRCNN::testConv()
+void SRCNN::testConv3Channels()
 {
     // input
     ImageDim inputDim = make_tuple(3, 5, 5);
