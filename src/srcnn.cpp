@@ -286,6 +286,38 @@ void SRCNN::testImageConv(string filename)
 
 void SRCNN::testConv1Channel()
 {
+    // input
+    ImageDim inputDim = make_tuple(1, 5, 5);
+    double input[]
+    {
+     1, 2, 3, 4, 5,
+     6, 7, 8, 9, 10,
+     11, 12, 13, 14, 15,
+     16, 17, 18, 19, 20,
+     21, 22, 23, 24, 25
+    };
+
+    // kernel
+    KernelDim kernelDim = make_tuple(1, 1, 3, 3);
+    double kernel[]
+    {
+     0, 1, 1,
+     1, 0, 0,
+     0, 1, 0
+    };
+
+    // output
+    ImageDim outputDim = make_tuple(1, 1, 5, 5);
+    double output[getTotalDimension(outputDim)];
+
+    // bias
+    ImageDim biasDim = make_tuple(1, 1, 1);
+    double bias[getTotalDimension(biasesDim)] = { -1 };
+
+    // apply convolution
+    convolution(input, output, inputDim, outputDim,
+                kernel, kernelDim, 1, bias, 
+                biasDim);
 }
 
 // http://cs231n.github.io/convolutional-networks/
