@@ -307,17 +307,33 @@ void SRCNN::testConv1Channel()
     };
 
     // output
-    ImageDim outputDim = make_tuple(1, 1, 5, 5);
+    ImageDim outputDim = make_tuple(1, 5, 5);
     double output[getTotalDimension(outputDim)];
 
     // bias
     ImageDim biasDim = make_tuple(1, 1, 1);
-    double bias[getTotalDimension(biasesDim)] = { -1 };
+    double bias[] = { -1 };
 
     // apply convolution
     convolution(input, output, inputDim, outputDim,
                 kernel, kernelDim, 1, bias, 
                 biasDim);
+
+    // print the convoluted result
+    int outputHeight = get<1>(outputDim);
+    int outputWidth = get<2>(outputDim);
+    for(int i = 0; i < get<0>(outputDim); i++)
+    {
+        for(int j = 0; j < outputHeight; j++)
+        {
+            for(int k = 0; k < outputWidth; k++)
+            {
+                cout << output[((i) * outputHeight + j) * outputWidth + k] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
 }
 
 // http://cs231n.github.io/convolutional-networks/
