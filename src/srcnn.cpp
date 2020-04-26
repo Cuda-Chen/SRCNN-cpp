@@ -460,25 +460,30 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     int outputHeight = get<1>(outputDim);
     int outputWidth = get<2>(outputDim);
 
-    int colDataSize = kernelInputChannel * kernelHeight * kernelWidth;
-    double *colData = new double[colDataSize];
-    double *kernelColData = new double[colDataSize];
+    /* Add assertion here in the future */
+
+    // input dimension = C * H * W = (K * K * C) * N
+    // where N = out_h * out_w
+    double *colData = new double[(kernelHeight * kernelWidth * kernelInputChannel) *
+                                 (outputHeight * outputWidth)];
+    // kernel dimenstion = N * C * H * W = N * (K * K * C)
+    // where N = # of filters (kernels)
+    double *kernelColData = new double[kernelOutputChannel *
+                                       (kernelHeight * kernelWidth * kernelInputChannel)];
     int padding = kernelHeightSize; // temp setting, may be changed in the future
 
-    for(int i = 0; i < kernelOutputChannel; i++)
+    im2col(input, inputDim, kernelDim, stride, padding, colData);
+    reshapeKernel(kernels, kernelDim, i, kernelColData); // <--- need to rewrite function
+
+    naiveGEMM(colData, kernelColData, colDataSize);
+
+    col2im(colData, outputDim, kernelDim, stride, padding, output);
+
+    if(bias != NULL)
     {
-        im2col(input, inputDim, kernelDim, stride, padding, colData);
-        reshapeKernel(kernels, kernelDim, i, kernelColData);
-
-        naiveGEMM(colData, kernelColData, colDataSize);
-
-        col2im(colData, outputDim, kernelDim, stride, padding, output);
-
-        if(bias != NULL)
-        {
-            addBias(output, outputDim, bias, biasDim);
-        }
+        addBias(output, outputDim, bias, biasDim);
     }
+
 
     delete [] colData;
     delete [] kernelColData;
