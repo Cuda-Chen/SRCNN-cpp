@@ -60,10 +60,15 @@ private:
     double im2colGetPixel(double *im, ImageDim imageDim, 
                           int row, int col, int channel, int pad);
     void col2imAddPixel(double *im, ImageDim imageDim,
-                        int row, int col, int channel, int pad, double value);  
-    void naiveGEMM(double *data_col, double *kernel_col, int col_size);
-    void addBias(double *im, ImageDim imDim, double *bias, ImageDim biasDim);
-    void reshapeKernel(double *kernels, KernelDim kernelDim, int outputChannel, double *kernels_col); 
+                        int row, int col, int channel, int pad, double value); 
+    void matMul(double *out, double *kernel, double *in, double *bias,
+                int kernel_row, int kernel_col, int in_row, int in_col); 
+    void naiveGEMM(double *out, double *kernel, double *in,
+                   int kernel_row, int kernel_col, int in_row, int in_col);
+    void naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
+                           int kernel_row, int kernel_col, int in_row, int in_col);
+
+
     void activation(double *input, double *output, ImageDim inputDim, 
         ACTIVATION activationType);
 

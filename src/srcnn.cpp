@@ -78,21 +78,22 @@ void SRCNN::generate(string filename)
     double *bias2Weights = new double[getTotalDimension(bias2Dim)];
     double *bias3Weights = new double[getTotalDimension(bias3Dim)]; 
     cout << "finish allocating conv and bias weights' space" << endl;
-    /*
+    
     readConvWeights(this->weights[0], conv1Weights); cout << "weight[0]" << endl;
     readConvWeights(this->weights[1], conv2Weights, true); cout << "weight[1]" << endl;
     readConvWeights(this->weights[2], conv3Weights, false, true); cout << "weight[2]" << endl;
     readBiasWeights(this->weights[3], bias1Weights); cout << "weight[3]" << endl;
     readBiasWeights(this->weights[4], bias2Weights); cout << "weight[4]" << endl;
     readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl;
-    */
+    
+    /*
     testReadConvWeights(this->weights[0], "myConv1Weight.txt", conv1Weights); cout << "weight[0]" << endl;
     testReadConvWeights(this->weights[1], "myConv2Weight.txt", conv2Weights, true); cout << "weight[1]" << endl;
     testReadConvWeights(this->weights[2], "myConv3Weight.txt", conv3Weights, false, true); cout << "weight[2]" << endl;
     testReadBiasWeights(this->weights[3], "myBias1Weight.txt", bias1Weights); cout << "weight[3]" << endl;
     testReadBiasWeights(this->weights[4], "myBias2Weight.txt", bias2Weights); cout << "weight[4]" << endl;
     testReadBiasWeights(this->weights[5], "myBias3Weight.txt", bias3Weights); cout << "weight[5]" << endl;
-
+    */
 
     // conv1 (feature extraction)
     cout << "conv1" << endl;
@@ -301,18 +302,18 @@ void SRCNN::testConv1Channel()
     KernelDim kernelDim = make_tuple(1, 1, 3, 3);
     double kernel[]
     {
-     0, 1, 1,
-     1, 0, 0,
-     0, 1, 0
+     0, 0, 0,
+     0, 1, 0,
+     0, 0, 0
     };
 
     // output
     ImageDim outputDim = make_tuple(1, 5, 5);
-    double output[getTotalDimension(outputDim)];
+    double *output = new double[getTotalDimension(outputDim)];
 
     // bias
     ImageDim biasDim = make_tuple(1, 1, 1);
-    double bias[] = { -1 };
+    double bias[] = { 0 };
 
     // apply convolution
     convolution(input, output, inputDim, outputDim,
@@ -464,29 +465,50 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
 
     // input dimension = C * H * W = (K * K * C) * N
     // where N = out_h * out_w
-    double *colData = new double[(kernelHeight * kernelWidth * kernelInputChannel) *
-                                 (outputHeight * outputWidth)];
-    // kernel dimenstion = N * C * H * W = N * (K * K * C)
-    // where N = # of filters (kernels)
-    double *kernelColData = new double[kernelOutputChannel *
-                                       (kernelHeight * kernelWidth * kernelInputChannel)];
-    int padding = kernelHeightSize; // temp setting, may be changed in the future
+    int input_col_width = kernelHeight * kernelWidth * inputChannel;
+    int input_col_height = outputHeight * outputWidth;
+    double *input_col = new double[input_col_height * input_col_width];
 
-    im2col(input, inputDim, kernelDim, stride, padding, colData);
-    reshapeKernel(kernels, kernelDim, i, kernelColData); // <--- need to rewrite function
+    int padding = kernelHeightSize; // temporary setting, may be changed in the future
 
-    naiveGEMM(colData, kernelColData, colDataSize);
+    im2col(input, inputDim, kernelDim, stride, padding, input_col);
 
-    col2im(colData, outputDim, kernelDim, stride, padding, output);
-
-    if(bias != NULL)
+    // Output input_col
+    int line_counter = 0;
+    cout << "input_col content:" << endl;
+    for(int i = 0; i < input_col_height * input_col_width; i++)
     {
-        addBias(output, outputDim, bias, biasDim);
+        cout << setw(2) << input_col[i] << " ";
+        line_counter++;
+        if(line_counter % (outputHeight * outputWidth) == 0)
+        {
+            cout << endl;
+        }
     }
 
+    // Output kernel
+    // Note the dimension is changed from NCHW to Nx(CxKxK)
+    int kernel_col_height = kernelOutputChannel;
+    int kernel_col_width = kernelInputChannel * kernelHeight * kernelWidth;
+    line_counter = 0;
+    cout << endl << "kernel content:" << endl;
+    for(int i = 0; i < kernel_col_height; i++)
+    {
+        for(int j = 0; j < kernel_col_width; j++)
+        {
+            cout << setw(2) << kernels[i * kernel_col_width + j] << " ";
+            line_counter++;
+            if(line_counter % kernel_col_width == 0)
+            {
+                cout << endl;
+            }
+        }
+    }
 
-    delete [] colData;
-    delete [] kernelColData;
+    matMul(output, kernels, input_col, bias,
+           kernel_col_height, kernel_col_width, input_col_height, input_col_width);
+
+    delete [] input_col;
 }
 
 void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
@@ -588,49 +610,58 @@ void SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
     im[col + width * (row + height * channel)] += value;
 }
 
-void SRCNN::naiveGEMM(double *data_col, double *kernel_col, int col_size)
+void SRCNN::matMul(double *out, double *kernel, double *in, double *bias,
+                   int kernel_row, int kernel_col, int in_row, int in_col)
 {
-    for(int i = 0; i < col_size; i++)
+    if(bias != NULL)
     {
-        data_col[i] = data_col[i] * kernel_col[i];
+        naiveGEMM(out, kernel, in, 
+                  kernel_row, kernel_col, in_row, in_col);
+    }
+    else
+    {
+        naiveGEMM_addBias(out, kernel, in, bias,
+                          kernel_row, kernel_col, in_row, in_col);
     }
 }
-
-void SRCNN::addBias(double *im, ImageDim imDim, double *bias, ImageDim biasDim)
+ 
+void SRCNN::naiveGEMM(double *out, double *kernel, double *in,
+                      int kernel_row, int kernel_col, int in_row, int in_col)
 {
-    int imChannel = get<0>(imDim);
-    int imHeight = get<1>(imDim);
-    int imWidth = get<2>(imDim);
+     /* The output matrix dimension will be kernel_row * in_col */
 
-    for(int c = 0; c < imChannel; c++)
+    for(int i = 0; i < kernel_row; i++)
     {
-        for(int h = 0; h < imHeight; h++)
+        for(int j = 0; j < in_col; j++)
         {
-            for(int w = 0; w < imWidth; w++)
+            out[i * in_col + j] = 0;
+            for(int k = 0; k < in_row; k++)
             {
-                im[w + imWidth * (h + imHeight * c)] += bias[c];
+                out[i * in_col + j] +=
+                    kernel[i * kernel_col + k] *
+                    in[k * in_col + j];
             }
         }
     }
 }
 
-void SRCNN::reshapeKernel(double *kernels, KernelDim kernelDim, int outputChannel, double *kernels_col)
+void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
+                              int kernel_row, int kernel_col, int in_row, int in_col)
 {
-    int channels = get<1>(kernelDim);
-    int height = get<2>(kernelDim);
-    int width = get<3>(kernelDim);
-    int col_idx = 0;
+    /* The output matrix dimension will be kernel_row * in_col */
 
-    for(int c = 0; c < channels; c++)
+    for(int i = 0; i < kernel_row; i++)
     {
-        for(int h = 0; h < height; h++)
+        for(int j = 0; j < in_col; j++)
         {
-            for(int w = 0; w < width; w++)
+            out[i * in_col + j] = 0;
+            for(int k = 0; k < in_row; k++)
             {
-                int idx = w + width * (h + height * (c + channels * outputChannel));
-                kernels_col[col_idx] = kernels[idx];
-                col_idx++;
+                out[i * in_col + j] +=
+                    kernel[i * kernel_col + k] *
+                    in[k * in_col + j];
             }
+            out[i * in_col + j] += bias[i];
         }
     }
 }
