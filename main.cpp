@@ -20,7 +20,8 @@ int main(int argc, char **argv)
     srcnn.showOutput();
     */
     //srcnn.testConv();
-    srcnn.testConv1Channel();
+    //srcnn.testConv1Channel();
+    srcnn.testConv3Channels();
     //srcnn.generate(filename);
     //srcnn.showOutput();
 

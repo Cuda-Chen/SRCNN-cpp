@@ -343,24 +343,25 @@ void SRCNN::testConv3Channels()
     // input
     ImageDim inputDim = make_tuple(3, 5, 5);
     double input[] = 
-    {/* channel 0 */
-     1, 2, 0, 0, 1,
-     0, 0, 1, 2, 1,
-     0, 0, 1, 1, 1,
-     0, 1, 0, 1, 0,
-     1, 2, 1, 1, 1,
-     /* channel 1 */
-     1, 1, 2, 1, 2,
-     2, 0, 1, 1, 1,
-     2, 0, 2, 2, 0,
-     2, 2, 2, 1, 2,
-     2, 1, 2, 0, 2,
-     /* channel 2*/
-     1, 2, 1, 1, 2,
-     2, 2, 2, 1, 1,
-     1, 0, 1, 0, 2,
-     2, 1, 1, 1, 1,
-     1, 2, 2, 0, 2
+    {
+        /* channel 0 */
+        2, 1, 1, 0, 1,
+        1, 1, 0, 2, 1,
+        2, 0, 0, 2, 2,
+        2, 0, 1, 1, 1,
+        1, 2, 2, 2, 0,
+        /* channel 1 */
+        0, 0, 0, 2, 1,
+        0, 0, 2, 0, 2,
+        0, 2, 2, 2, 1,
+        0, 0, 2, 0, 1,
+        0, 0, 2, 1, 1,
+        /* channel 2 */
+        0, 2, 2, 0, 2,
+        0, 1, 1, 0, 2,
+        1, 2, 1, 1, 0,
+        2, 2, 0, 2, 2,
+        2, 0, 2, 2, 0
     };
 
     // output
@@ -383,34 +384,36 @@ void SRCNN::testConv3Channels()
     // kernel
     KernelDim filtersDim = make_tuple(2, 3, 3, 3);
     double filters[] = 
-    {/* filter w0 */
-     /* channel 0 */
-     0, -1, 0,
-     -1, 1, 0,
-     0, -1, -1,
-     /* channel 1 */
-     -1, 1, 0,
-     -1, -1, 1,
-     1, -1, 1,
-     /* channel 2 */
-     0, 0, 1,
-     1, 0, 0,
-     -1, 1, 1,
+    {
+        /* filter w0 */
+        /* channel 0 */
+        0, 0, 1,
+        0, 0, -1,
+        1, 0, 0,
+        /* channel 1 */
+        -1, 0, 1,
+        1, 1, 0,
+        0, 0, 0,
+        /* channel 2 */
+        1, -1, -1,
+        1, 0, -1,
+        1, -1, 0,
 
-     /* filter w1 */
-     /* channel 0 */
-     1, -1, 1,
-     0, -1, 1,
-     1, 0, 1,
-     /* channel 1 */
-     0, -1, -1,
-     1, 1, 1,
-     0, -1, 0,
-     /* channel 2 */
-     -1, 0, -1,
-     -1, -1, -1,
-     0, 0, 1
+        /* filter w1 */
+        /* channel 0 */
+        1, 1, 0,
+        0, 1, 1,
+        1, 1, 0,
+        /* channel 1 */
+        -1, 1, -1,
+        -1, 0, 1,
+        -1, 0, 1,
+        /* channel 2 */
+        1, -1, 1,
+        1, 1, 0,
+        -1, -1, 1
     };
+
 
     // bias
     ImageDim biasesDim = make_tuple(2, 1, 1);
@@ -465,8 +468,8 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
 
     // input dimension = C * H * W = (K * K * C) * N
     // where N = out_h * out_w
-    int input_col_width = kernelHeight * kernelWidth * inputChannel;
-    int input_col_height = outputHeight * outputWidth;
+    int input_col_height = kernelHeight * kernelWidth * inputChannel;
+    int input_col_width = outputHeight * outputWidth;
     double *input_col = new double[input_col_height * input_col_width];
 
     int padding = kernelHeightSize; // temporary setting, may be changed in the future
@@ -613,7 +616,7 @@ void SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
 void SRCNN::matMul(double *out, double *kernel, double *in, double *bias,
                    int kernel_row, int kernel_col, int in_row, int in_col)
 {
-    if(bias != NULL)
+    if(bias == NULL)
     {
         naiveGEMM(out, kernel, in, 
                   kernel_row, kernel_col, in_row, in_col);
