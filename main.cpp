@@ -14,14 +14,15 @@ int main(int argc, char **argv)
     string filename = argv[1];
 
     SRCNN srcnn;
-    /*
+    
     srcnn.checkWeightStatus();
     srcnn.generate(filename);
     srcnn.showOutput();
-    */
+    
+    //srcnn.testImageConv(filename);
     //srcnn.testConv();
     //srcnn.testConv1Channel();
-    srcnn.testConv3Channels();
+    //srcnn.testConv3Channels();
     //srcnn.generate(filename);
     //srcnn.showOutput();
 

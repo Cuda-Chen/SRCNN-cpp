@@ -477,6 +477,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     im2col(input, inputDim, kernelDim, stride, padding, input_col);
 
     // Output input_col
+#if 0
     int line_counter = 0;
     cout << "input_col content:" << endl;
     for(int i = 0; i < input_col_height * input_col_width; i++)
@@ -488,11 +489,13 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
             cout << endl;
         }
     }
+#endif
 
     // Output kernel
     // Note the dimension is changed from NCHW to Nx(CxKxK)
     int kernel_col_height = kernelOutputChannel;
     int kernel_col_width = kernelInputChannel * kernelHeight * kernelWidth;
+#if 0
     line_counter = 0;
     cout << endl << "kernel content:" << endl;
     for(int i = 0; i < kernel_col_height; i++)
@@ -507,6 +510,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
             }
         }
     }
+#endif
 
     matMul(output, kernels, input_col, bias,
            kernel_col_height, kernel_col_width, input_col_height, input_col_width);
