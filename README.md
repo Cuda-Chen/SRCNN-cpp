@@ -2,7 +2,8 @@
 C++ implementation of SRCNN (Super-Resolution Convolutional Neural Network)
 
 # Note
-This project is **incomplete**, and I am still working on this :)
+Currently I am facing the issue ringing effect of output. Any help will be 
+delighted.
 
 # How to Build and Run
 ```
@@ -16,6 +17,6 @@ This implementation uses 9-5-5 architecture.
 - You can see the explanation in [Section 4.3.2 in SRCNN paper](https://arxiv.org/pdf/1501.00092.pdf).
 
 # TODO
-- [ ] `im2col`
-- [ ] validate convolution using [this image](https://zhuanlan.zhihu.com/p/63974249)
-- [ ] padding feature
+- [x] `im2col`
+- [x] validate convolution using [this image](https://zhuanlan.zhihu.com/p/63974249)
+- [x] padding feature
