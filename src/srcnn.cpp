@@ -101,15 +101,22 @@ void SRCNN::generate(string filename)
     /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
         "myConv1Weight.txt", "myBias1Weight.txt");*/
     activation(conv1Data, conv1Data, conv1Dim, RELU); 
-    /* 
-    for(int i = 0; i < 64; i++)
+    double *conv1arr = new double[get<1>(conv1Dim) * get<2>(conv1Dim)];
+    for(int i = 0; i < 32; i++)
     {
-        Mat conv1(get<1>(conv1Dim), get<2>(conv1Dim), CV_64FC1, conv1Data[i * get<1>(conv1Dim) * get<2>(conv1Dim)]);
+        for(int j = 0; j < get<1>(conv1Dim); j++)
+        {
+            for(int k = 0; k < get<2>(conv1Dim); k++)
+            {
+                conv1arr[j * get<2>(conv1Dim) + k] = conv1Data[(i * get<1>(conv1Dim) + j) * get<2>(conv1Dim) + k];
+            }
+        }
+        Mat conv1(get<1>(conv1Dim), get<2>(conv1Dim), CV_64FC1, conv1arr);
         conv1.convertTo(conv1, CV_8UC1, 255.0);
         string outputname = "conv1_" + to_string(i) + ".jpg";
         imwrite(outputname, conv1);
     }
-    */
+    delete [] conv1arr;
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
@@ -117,21 +124,36 @@ void SRCNN::generate(string filename)
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
-    /*
+    
+    double *conv2arr = new double[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
-        Mat conv2(get<1>(conv2Dim), get<2>(conv2Dim), CV_64FC1, conv2Data[i * get<1>(conv2Dim) * get<2>(conv2Dim)]);
+        for(int j = 0; j < get<1>(conv2Dim); j++)
+        {
+            for(int k = 0; k < get<2>(conv2Dim); k++)
+            {
+                conv2arr[j * get<2>(conv2Dim) + k] = conv2Data[(i * get<1>(conv2Dim) + j) * get<2>(conv2Dim) + k];
+            }
+        }
+        Mat conv2(get<1>(conv2Dim), get<2>(conv2Dim), CV_64FC1, conv2arr);
         conv2.convertTo(conv2, CV_8UC1, 255.0);
         string outputname = "conv2_" + to_string(i) + ".jpg";
         imwrite(outputname, conv2);
     }
-    */
+    delete [] conv2arr;
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
     convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
     /*testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
         "myConv3Weight.txt", "myBias3Weight.txt");*/
+    for(int i = 0; i < get<0>(conv3Dim); i++)
+    {
+        Mat conv3(get<1>(conv3Dim), get<2>(conv3Dim), CV_64FC1, conv3Data);
+        conv3.convertTo(conv3, CV_8UC1, 255.0);
+        string outputname = "conv3_" + to_string(i) + ".jpg";
+        imwrite(outputname, conv3);
+    }
     cout << "prepare output" << endl;
     for(int i = 0; i < outputHeight; i++)
     {
