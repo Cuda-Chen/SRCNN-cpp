@@ -63,9 +63,9 @@ void SRCNN::generate(string filename)
     // read conv and bias weights
     cout << "read conv and bias weights" << endl;
     cout << "kernelDim" << endl;
-    KernelDim conv1WeightsDim = make_tuple(1, 9, 9, 64);
-    KernelDim conv2WeightsDim = make_tuple(64, 5, 5, 32);
-    KernelDim conv3WeightsDim = make_tuple(32, 5, 5, 1);
+    KernelDim conv1WeightsDim = make_tuple(64, 1, 9, 9);
+    KernelDim conv2WeightsDim = make_tuple(32, 64, 5, 5);
+    KernelDim conv3WeightsDim = make_tuple(1, 32, 5, 5);
     cout << "biasDim" << endl;
     ImageDim bias1Dim = make_tuple(64, 1, 1);
     ImageDim bias2Dim = make_tuple(32, 1, 1);
@@ -140,10 +140,12 @@ void SRCNN::generate(string filename)
             //cout << i << " " << j << " fine" << endl;
             dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
             //dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
+#if 0
             if(dst[(i * outputWidth) + j] != 0)
             {
                 cout << "index " << i << " " << j << " " << conv3Data[(i * outputWidth) + j] << endl;
             }
+#endif
         }
     }
 
