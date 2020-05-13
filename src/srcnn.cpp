@@ -73,6 +73,7 @@ void SRCNN::generate(string filename)
     cout << "finish setting bias dim" << endl;
     double *conv1Weights = new double[getTotalDimension(conv1WeightsDim)];
     double *conv2Weights = new double[getTotalDimension(conv2WeightsDim)];
+    double *conv2Weights_transposed = new double[getTotalDimension(conv2WeightsDim)];
     double *conv3Weights = new double[getTotalDimension(conv3WeightsDim)];
     double *bias1Weights = new double[getTotalDimension(bias1Dim)];
     double *bias2Weights = new double[getTotalDimension(bias2Dim)];
@@ -122,6 +123,7 @@ void SRCNN::generate(string filename)
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
+    //CHWN2NCHW(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
     convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
@@ -722,6 +724,17 @@ void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *b
                     in[k * in_col + j];
             }
             out[i * in_col + j] += bias[i];
+        }
+    }
+}
+
+void SRCNN::CHWN2NCHW(double *out, double *in, int in_row, int in_col)
+{
+    for(int i = 0; i < in_row; i++)
+    {
+        for(int j = 0; j < in_col; j++)
+        {
+            out[j * in_col + i] = in[i * in_col + j];
         }
     }
 }
