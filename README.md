@@ -5,6 +5,8 @@ C++ implementation of SRCNN (Super-Resolution Convolutional Neural Network)
 Currently I am facing the issue ringing effect of output. Any help will be 
 delighted.
 
+The weight format is **CHWN** because the weights is created by cuda-convnet.
+
 # How to Build and Run
 ```
 $ mkdir build && cd build && cmake .. && make && cd ..
