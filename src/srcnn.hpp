@@ -22,6 +22,7 @@ public:
     SRCNN(std::string weights);
     void generate(std::string filename);
     void showOutput();
+    void outputImage();
     int getTotalDimension(ImageDim dim);
     int getTotalDimension(KernelDim dim);
 

@@ -72,9 +72,11 @@ void SRCNN::generate(string filename)
     ImageDim bias3Dim = make_tuple(1, 1, 1);
     cout << "finish setting bias dim" << endl;
     double *conv1Weights = new double[getTotalDimension(conv1WeightsDim)];
+    double *conv1Weights_transposed = new double[getTotalDimension(conv1WeightsDim)];
     double *conv2Weights = new double[getTotalDimension(conv2WeightsDim)];
     double *conv2Weights_transposed = new double[getTotalDimension(conv2WeightsDim)];
     double *conv3Weights = new double[getTotalDimension(conv3WeightsDim)];
+    double *conv3Weights_transposed = new double[getTotalDimension(conv3WeightsDim)];
     double *bias1Weights = new double[getTotalDimension(bias1Dim)];
     double *bias2Weights = new double[getTotalDimension(bias2Dim)];
     double *bias3Weights = new double[getTotalDimension(bias3Dim)]; 
@@ -98,13 +100,15 @@ void SRCNN::generate(string filename)
 
     // conv1 (feature extraction)
     cout << "conv1" << endl;
+    /*transpose(conv1Weights_transposed, conv1Weights, getTotalDimension(conv1WeightsDim) / get<0>(conv1WeightsDim), get<0>(conv1WeightsDim));
+    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights_transposed, conv1WeightsDim, 1, bias1Weights, bias1Dim);*/
     convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
     /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
         "myConv1Weight.txt", "myBias1Weight.txt");*/
     activation(conv1Data, conv1Data, conv1Dim, RELU);
-#if 0 
+//#if 0 
     double *conv1arr = new double[get<1>(conv1Dim) * get<2>(conv1Dim)];
-    for(int i = 0; i < 32; i++)
+    for(int i = 0; i < get<0>(conv1Dim); i++)
     {
         for(int j = 0; j < get<1>(conv1Dim); j++)
         {
@@ -119,16 +123,16 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv1);
     }
     delete [] conv1arr;
-#endif
+//#endif
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
-    //transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
+    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
-#if 0
+//#if 0
     double *conv2arr = new double[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
@@ -145,15 +149,17 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv2);
     }
     delete [] conv2arr;
-#endif
+//#endif
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
+    /*transpose(conv3Weights_transposed, conv3Weights, getTotalDimension(conv3WeightsDim) / get<0>(conv3WeightsDim), get<0>(conv3WeightsDim));
+    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights_transposed, conv3WeightsDim, 1, bias3Weights, bias3Dim);*/
     convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
     /*testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
         "myConv3Weight.txt", "myBias3Weight.txt");*/
     //activation(conv3Data, conv3Data, conv3Dim, RELU);
-#if 0
+//#if 0
     unsigned char *conv3arr = new unsigned char[get<1>(conv3Dim) * get<2>(conv3Dim)];
     for(int i = 0; i < get<0>(conv3Dim); i++)
     {
@@ -172,7 +178,7 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv3);
     }
     delete [] conv3arr;
-#endif
+//#endif
 
     cout << "prepare output" << endl;
     for(int i = 0; i < outputHeight; i++)
@@ -182,12 +188,12 @@ void SRCNN::generate(string filename)
             //cout << i << " " << j << " fine" << endl;
             dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
             //dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
-
+#if 0
             if(dst[(i * outputWidth) + j] != 0)
             {
                 cout << "index " << i << " " << j << " " << conv3Data[(i * outputWidth) + j] << endl;
             }
-
+#endif
         }
     }
 
@@ -202,8 +208,11 @@ void SRCNN::generate(string filename)
     delete [] conv2Data;
     delete [] conv3Data;
     delete [] conv1Weights;
+    delete [] conv1Weights_transposed;
     delete [] conv2Weights;
+    delete [] conv2Weights_transposed;
     delete [] conv3Weights;
+    delete [] conv3Weights_transposed;
     delete [] bias1Weights;
     delete [] bias2Weights;
     delete [] bias3Weights;
@@ -224,6 +233,11 @@ void SRCNN::showOutput()
     namedWindow("SRCNN");
     imshow("SRCNN", this->output);
     waitKey(0);
+}
+
+void SRCNN::outputImage()
+{
+    imwrite("srcnnResult.bmp", this->output);
 }
 
 int SRCNN::getTotalDimension(ImageDim dim)

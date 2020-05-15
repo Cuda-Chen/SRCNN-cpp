@@ -14,16 +14,17 @@ int main(int argc, char **argv)
     string filename = argv[1];
 
     SRCNN srcnn;
-/*    
+    
     srcnn.checkWeightStatus();
     srcnn.generate(filename);
-    srcnn.showOutput();
-  */  
+    //srcnn.showOutput();
+    srcnn.outputImage();
+    
     //srcnn.testImageConv(filename);
     //srcnn.testConv();
     //srcnn.testConv1Channel();
     //srcnn.testConv3Channels();
-    srcnn.testTranspose();
+    //srcnn.testTranspose();
     //srcnn.generate(filename);
     //srcnn.showOutput();
 
