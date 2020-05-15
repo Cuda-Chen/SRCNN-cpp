@@ -30,6 +30,7 @@ public:
     void testImageConv(std::string filename);
     void testConv1Channel();
     void testConv3Channels();
+    void testTranspose();
 
 private:
     int scale = 2;

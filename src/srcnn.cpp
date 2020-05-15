@@ -128,7 +128,7 @@ void SRCNN::generate(string filename)
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
-
+#if 0
     double *conv2arr = new double[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
@@ -145,7 +145,7 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv2);
     }
     delete [] conv2arr;
-
+#endif
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
@@ -153,7 +153,7 @@ void SRCNN::generate(string filename)
     /*testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
         "myConv3Weight.txt", "myBias3Weight.txt");*/
     //activation(conv3Data, conv3Data, conv3Dim, RELU);
-
+#if 0
     unsigned char *conv3arr = new unsigned char[get<1>(conv3Dim) * get<2>(conv3Dim)];
     for(int i = 0; i < get<0>(conv3Dim); i++)
     {
@@ -172,7 +172,7 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv3);
     }
     delete [] conv3arr;
-
+#endif
 
     cout << "prepare output" << endl;
     for(int i = 0; i < outputHeight; i++)
@@ -488,6 +488,81 @@ void SRCNN::testConv3Channels()
     }
 }
 
+// matrix transpose test
+void SRCNN::testTranspose()
+{
+    // kernel
+    KernelDim filtersDim = make_tuple(2, 3, 3, 3);
+    int kernel_num = 2;
+    int kernel_c = 3;
+    int kernel_h = 3;
+    int kernel_w = 3;
+    double testKernel[] = 
+    {
+        /* filter w0 */
+        /* channel 0 */
+        0, 0, 1,
+        0, 0, -1,
+        1, 0, 0,
+        /* channel 1 */
+        -1, 0, 1,
+        1, 1, 0,
+        0, 0, 0,
+        /* channel 2 */
+        1, -1, -1,
+        1, 0, -1,
+        1, -1, 0,
+
+        /* filter w1 */
+        /* channel 0 */
+        1, 1, 0,
+        0, 1, 1,
+        1, 1, 0,
+        /* channel 1 */
+        -1, 1, -1,
+        -1, 0, 1,
+        -1, 0, 1,
+        /* channel 2 */
+        1, -1, 1,
+        1, 1, 0,
+        -1, -1, 1
+    };
+
+    double *filters_transposed = new double[getTotalDimension(filtersDim)];
+    int filters_transposed_h = kernel_c * kernel_h * kernel_w;
+    int filters_transposed_w = kernel_num;
+
+    double *result = new double[getTotalDimension(filtersDim)];
+    int result_h = kernel_num;
+    int result_w = kernel_c * kernel_h * kernel_w;
+
+    transpose(filters_transposed, testKernel, kernel_num, kernel_c * kernel_h * kernel_w);
+    cout << "transpose: " << endl;
+    for(int i = 0; i < filters_transposed_h; i++)
+    {
+        for(int j = 0; j < filters_transposed_w; j++)
+        {
+            cout << filters_transposed[i * filters_transposed_w + j] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+
+    transpose(result, filters_transposed, filters_transposed_h, filters_transposed_w);
+    cout << "result: " << endl;
+    for(int i = 0; i < kernel_num; i++)
+    {
+        for(int j = 0; j < kernel_c * kernel_h * kernel_w; j++)
+        {
+            cout << result[i * kernel_c * kernel_h * kernel_w + j] << " ";
+        }
+        cout << endl;
+    }
+
+    delete [] filters_transposed;
+    delete [] result;
+}
+
 // standard convolution
 void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride/* = 1*/,
@@ -734,7 +809,7 @@ void SRCNN::transpose(double *out, double *in, int in_row, int in_col)
     {
         for(int j = 0; j < in_col; j++)
         {
-            out[j * in_col + i] = in[i * in_col + j];
+            out[j * in_row + i] = in[i * in_col + j];
         }
     }
 }
