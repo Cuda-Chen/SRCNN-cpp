@@ -123,12 +123,12 @@ void SRCNN::generate(string filename)
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
-    //CHWN2NCHW(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
+    //transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
     convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
-#if 0
+
     double *conv2arr = new double[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
@@ -145,7 +145,7 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv2);
     }
     delete [] conv2arr;
-#endif
+
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
@@ -153,7 +153,7 @@ void SRCNN::generate(string filename)
     /*testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
         "myConv3Weight.txt", "myBias3Weight.txt");*/
     //activation(conv3Data, conv3Data, conv3Dim, RELU);
-#if 0
+
     unsigned char *conv3arr = new unsigned char[get<1>(conv3Dim) * get<2>(conv3Dim)];
     for(int i = 0; i < get<0>(conv3Dim); i++)
     {
@@ -172,7 +172,7 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv3);
     }
     delete [] conv3arr;
-#endif
+
 
     cout << "prepare output" << endl;
     for(int i = 0; i < outputHeight; i++)
@@ -182,12 +182,12 @@ void SRCNN::generate(string filename)
             //cout << i << " " << j << " fine" << endl;
             dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
             //dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
-#if 0
+
             if(dst[(i * outputWidth) + j] != 0)
             {
                 cout << "index " << i << " " << j << " " << conv3Data[(i * outputWidth) + j] << endl;
             }
-#endif
+
         }
     }
 
@@ -728,7 +728,7 @@ void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *b
     }
 }
 
-void SRCNN::CHWN2NCHW(double *out, double *in, int in_row, int in_col)
+void SRCNN::transpose(double *out, double *in, int in_row, int in_col)
 {
     for(int i = 0; i < in_row; i++)
     {

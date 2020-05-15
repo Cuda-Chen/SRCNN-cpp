@@ -67,7 +67,7 @@ private:
                    int kernel_row, int kernel_col, int in_row, int in_col);
     void naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
                            int kernel_row, int kernel_col, int in_row, int in_col);
-    void CHWN2NCHW(double *out, double *in, int in_row, int in_col);
+    void transpose(double *out, double *in, int in_row, int in_col);
 
     void activation(double *input, double *output, ImageDim inputDim, 
         ACTIVATION activationType);
