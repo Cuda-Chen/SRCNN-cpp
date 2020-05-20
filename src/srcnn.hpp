@@ -53,43 +53,43 @@ private:
     std::vector<std::string> weights = {weightsConv1, weightsConv2,
         weightsConv3, biasConv1, biasConv2, biasConv3};
 
-    void convolution(double *input, double *output, ImageDim inputDim,
-        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
-        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
-    void im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
-                int stride, int pad, double *data_col);
-    void col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
-                int stride, int pad, double *data_im);
-    double im2colGetPixel(double *im, ImageDim imageDim, 
+    void convolution(float *input, float *output, ImageDim inputDim,
+        ImageDim outputDim, float *kernels, KernelDim kernelDim, int stride = 1,
+        float *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
+    void im2col(float *data_im, ImageDim imageDim, KernelDim kernelDim,
+                int stride, int pad, float *data_col);
+    void col2im(float *data_col, ImageDim imageDim, KernelDim kernelDim,
+                int stride, int pad, float *data_im);
+    float im2colGetPixel(float *im, ImageDim imageDim, 
                           int row, int col, int channel, int pad);
-    void col2imAddPixel(double *im, ImageDim imageDim,
-                        int row, int col, int channel, int pad, double value); 
-    void matMul(double *out, double *kernel, double *in, double *bias,
+    void col2imAddPixel(float *im, ImageDim imageDim,
+                        int row, int col, int channel, int pad, float value); 
+    void matMul(float *out, float *kernel, float *in, float *bias,
                 int kernel_row, int kernel_col, int in_row, int in_col); 
-    void naiveGEMM(double *out, double *kernel, double *in,
+    void naiveGEMM(float *out, float *kernel, float *in,
                    int kernel_row, int kernel_col, int in_row, int in_col);
-    void naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
+    void naiveGEMM_addBias(float *out, float *kernel, float *in, float *bias,
                            int kernel_row, int kernel_col, int in_row, int in_col);
-    void transpose(double *out, double *in, int in_row, int in_col);
+    void transpose(float *out, float *in, int in_row, int in_col);
 
-    void activation(double *input, double *output, ImageDim inputDim, 
+    void activation(float *input, float *output, ImageDim inputDim, 
         ACTIVATION activationType);
 
-    inline double relu_activate(double x) 
+    inline float relu_activate(float x) 
     {
         return x * (x > 0);
     }
 
-    void readConvWeights(std::string filename, double *weights, bool special = false, bool isReverse = false);
-    void readBiasWeights(std::string filename, double *weights);
+    void readConvWeights(std::string filename, float *weights, bool special = false, bool isReverse = false);
+    void readBiasWeights(std::string filename, float *weights);
 
     // unit test functions
-    void testConvolution(double *input, double *output, ImageDim inputDim,
-        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
-        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), 
+    void testConvolution(float *input, float *output, ImageDim inputDim,
+        ImageDim outputDim, float *kernels, KernelDim kernelDim, int stride = 1,
+        float *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), 
         std::string outputConvWeightPath = NULL, std::string outputBiasWeightPath = NULL);
-    void testReadConvWeights(std::string filename, std::string outputfile, double *weights, bool special = false, bool isReverse = false);
-    void testReadBiasWeights(std::string filename, std::string outputfile, double *weights);
+    void testReadConvWeights(std::string filename, std::string outputfile, float *weights, bool special = false, bool isReverse = false);
+    void testReadBiasWeights(std::string filename, std::string outputfile, float *weights);
 };
 
 #endif

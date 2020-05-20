@@ -39,17 +39,17 @@ void SRCNN::generate(string filename)
     int inputHeight = this->bicubic.rows;
     cout << "input width height " << inputWidth << " " << inputHeight << endl;
     ImageDim inputDim = make_tuple(1, inputHeight, inputWidth);
-    double *input = new double[inputHeight * inputWidth];
+    float *input = new float[inputHeight * inputWidth];
     ImageDim conv1Dim = make_tuple(64, inputHeight, inputWidth);
     ImageDim conv2Dim = make_tuple(32, inputHeight, inputWidth);
     ImageDim conv3Dim = make_tuple(1, inputHeight, inputWidth);
-    double *conv1Data = new double[getTotalDimension(conv1Dim)];
-    double *conv2Data = new double[getTotalDimension(conv2Dim)];
-    double *conv3Data = new double[getTotalDimension(conv3Dim)];
+    float *conv1Data = new float[getTotalDimension(conv1Dim)];
+    float *conv2Data = new float[getTotalDimension(conv2Dim)];
+    float *conv3Data = new float[getTotalDimension(conv3Dim)];
     int outputWidth = inputWidth;
     int outputHeight = inputHeight;
     cout << "output width height " << outputWidth << " " << outputHeight << endl;
-    double *dst = new double[outputHeight * outputWidth];
+    float *dst = new float[outputHeight * outputWidth];
     cout << "assign input and output value" << endl;
     for(int i = 0; i < inputHeight; i++)
     {
@@ -71,15 +71,15 @@ void SRCNN::generate(string filename)
     ImageDim bias2Dim = make_tuple(32, 1, 1);
     ImageDim bias3Dim = make_tuple(1, 1, 1);
     cout << "finish setting bias dim" << endl;
-    double *conv1Weights = new double[getTotalDimension(conv1WeightsDim)];
-    double *conv1Weights_transposed = new double[getTotalDimension(conv1WeightsDim)];
-    double *conv2Weights = new double[getTotalDimension(conv2WeightsDim)];
-    double *conv2Weights_transposed = new double[getTotalDimension(conv2WeightsDim)];
-    double *conv3Weights = new double[getTotalDimension(conv3WeightsDim)];
-    double *conv3Weights_transposed = new double[getTotalDimension(conv3WeightsDim)];
-    double *bias1Weights = new double[getTotalDimension(bias1Dim)];
-    double *bias2Weights = new double[getTotalDimension(bias2Dim)];
-    double *bias3Weights = new double[getTotalDimension(bias3Dim)]; 
+    float *conv1Weights = new float[getTotalDimension(conv1WeightsDim)];
+    float *conv1Weights_transposed = new float[getTotalDimension(conv1WeightsDim)];
+    float *conv2Weights = new float[getTotalDimension(conv2WeightsDim)];
+    float *conv2Weights_transposed = new float[getTotalDimension(conv2WeightsDim)];
+    float *conv3Weights = new float[getTotalDimension(conv3WeightsDim)];
+    float *conv3Weights_transposed = new float[getTotalDimension(conv3WeightsDim)];
+    float *bias1Weights = new float[getTotalDimension(bias1Dim)];
+    float *bias2Weights = new float[getTotalDimension(bias2Dim)];
+    float *bias3Weights = new float[getTotalDimension(bias3Dim)]; 
     cout << "finish allocating conv and bias weights' space" << endl;
     
     readConvWeights(this->weights[0], conv1Weights); cout << "weight[0]" << endl;
@@ -107,7 +107,7 @@ void SRCNN::generate(string filename)
         "myConv1Weight.txt", "myBias1Weight.txt");*/
     activation(conv1Data, conv1Data, conv1Dim, RELU);
 //#if 0 
-    double *conv1arr = new double[get<1>(conv1Dim) * get<2>(conv1Dim)];
+    float *conv1arr = new float[get<1>(conv1Dim) * get<2>(conv1Dim)];
     for(int i = 0; i < get<0>(conv1Dim); i++)
     {
         for(int j = 0; j < get<1>(conv1Dim); j++)
@@ -117,7 +117,7 @@ void SRCNN::generate(string filename)
                 conv1arr[j * get<2>(conv1Dim) + k] = conv1Data[(i * get<1>(conv1Dim) + j) * get<2>(conv1Dim) + k];
             }
         }
-        Mat conv1(get<1>(conv1Dim), get<2>(conv1Dim), CV_64FC1, conv1arr);
+        Mat conv1(get<1>(conv1Dim), get<2>(conv1Dim), CV_32FC1, conv1arr);
         conv1.convertTo(conv1, CV_8UC1, 255.0);
         string outputname = "conv1_" + to_string(i) + ".jpg";
         imwrite(outputname, conv1);
@@ -133,7 +133,7 @@ void SRCNN::generate(string filename)
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
 //#if 0
-    double *conv2arr = new double[get<1>(conv2Dim) * get<2>(conv2Dim)];
+    float *conv2arr = new float[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
         for(int j = 0; j < get<1>(conv2Dim); j++)
@@ -143,7 +143,7 @@ void SRCNN::generate(string filename)
                 conv2arr[j * get<2>(conv2Dim) + k] = conv2Data[(i * get<1>(conv2Dim) + j) * get<2>(conv2Dim) + k];
             }
         }
-        Mat conv2(get<1>(conv2Dim), get<2>(conv2Dim), CV_64FC1, conv2arr);
+        Mat conv2(get<1>(conv2Dim), get<2>(conv2Dim), CV_32FC1, conv2arr);
         conv2.convertTo(conv2, CV_8UC1, 255.0);
         string outputname = "conv2_" + to_string(i) + ".jpg";
         imwrite(outputname, conv2);
@@ -199,7 +199,7 @@ void SRCNN::generate(string filename)
 
     // copy to output OpenCV Mat
     cout << "copy to output OpenCV Mat" << endl;
-    Mat SRCNN(outputHeight, outputWidth, CV_64FC1, dst);
+    Mat SRCNN(outputHeight, outputWidth, CV_32FC1, dst);
     //Mat SRCNN(outputHeight, outputWidth, CV_64FC1, conv3Data);
     this->output = SRCNN;
 
@@ -260,8 +260,8 @@ void SRCNN::checkWeightStatus()
             cerr << "file " << weightPath << " opened unsuccessfully" << endl;
             continue;
         }
-        vector<double> contents;
-        double temp;
+        vector<float> contents;
+        float temp;
         while(input >> temp)
         {
             contents.push_back(temp);
@@ -290,18 +290,19 @@ void SRCNN::testImageConv(string filename)
     unsigned char *destination = new unsigned char[height * width];
 
     // Conv test 
-    double *input = new double[1 * height * width];
-    double *output = new double[1 * height * width];
+    float *input = new float[1 * height * width];
+    float *output = new float[1 * height * width];
     ImageDim inputDim = make_tuple(1, height, width);
     ImageDim outputDim = make_tuple(1, height, width);
     unsigned char *dst = new unsigned char[height * width];
 
     int kernelWidth = 3;
     int kernelHeight = 3;
-    double sigma = 3.0;
+    float sigma = 3.0;
 
     // Conv test
     double *kernel = new double[kernelHeight * kernelWidth];
+    float *kernel_float = new float[kernelHeight * kernelWidth];
     KernelDim kernelDim = make_tuple(1, 1, kernelHeight, kernelWidth);
 
     for(int i = 0; i < height; i++)
@@ -316,13 +317,20 @@ void SRCNN::testImageConv(string filename)
         }
     }
     generateKernel(kernelWidth, kernelHeight, sigma, kernel);
+    for(int i = 0; i < kernelHeight; i++)
+    {
+        for(int j = 0; j < kernelWidth; j++)
+        {
+            kernel_float[i * kernelWidth + j] = (float)kernel[i * kernelWidth + j];
+        }
+    }
 
     gaussianFilter(source, destination, width, height, kernelWidth, kernelHeight, sigma);
     Mat result(height, width, CV_8UC1, destination);
     imshow("gaussian", result);
     waitKey(0);
 
-    convolution(input, output, inputDim, outputDim, kernel, kernelDim); 
+    convolution(input, output, inputDim, outputDim, kernel_float, kernelDim); 
     int counter = 0;
     for(int i = 0; i < height; i++)
     {
@@ -347,7 +355,7 @@ void SRCNN::testConv1Channel()
 {
     // input
     ImageDim inputDim = make_tuple(1, 5, 5);
-    double input[]
+    float input[]
     {
      1, 2, 3, 4, 5,
      6, 7, 8, 9, 10,
@@ -358,7 +366,7 @@ void SRCNN::testConv1Channel()
 
     // kernel
     KernelDim kernelDim = make_tuple(1, 1, 3, 3);
-    double kernel[]
+    float kernel[]
     {
      0, 0, 0,
      0, 1, 0,
@@ -367,11 +375,11 @@ void SRCNN::testConv1Channel()
 
     // output
     ImageDim outputDim = make_tuple(1, 5, 5);
-    double *output = new double[getTotalDimension(outputDim)];
+    float *output = new float[getTotalDimension(outputDim)];
 
     // bias
     ImageDim biasDim = make_tuple(1, 1, 1);
-    double bias[] = { 0 };
+    float bias[] = { 0 };
 
     // apply convolution
     convolution(input, output, inputDim, outputDim,
@@ -400,7 +408,7 @@ void SRCNN::testConv3Channels()
 {
     // input
     ImageDim inputDim = make_tuple(3, 5, 5);
-    double input[] = 
+    float input[] = 
     {
         /* channel 0 */
         2, 1, 1, 0, 1,
@@ -427,7 +435,7 @@ void SRCNN::testConv3Channels()
     int outputHeight = 3;
     int outputWidth = 3;
     ImageDim outputDim = make_tuple(2, 3, 3);
-    double *output = new double[getTotalDimension(outputDim)];
+    float *output = new float[getTotalDimension(outputDim)];
     for(int i = 0; i < outputDepth; i++)
     {
         for(int j = 0; j < outputHeight; j++)
@@ -441,7 +449,7 @@ void SRCNN::testConv3Channels()
 
     // kernel
     KernelDim filtersDim = make_tuple(2, 3, 3, 3);
-    double filters[] = 
+    float filters[] = 
     {
         /* filter w0 */
         /* channel 0 */
@@ -475,7 +483,7 @@ void SRCNN::testConv3Channels()
 
     // bias
     ImageDim biasesDim = make_tuple(2, 1, 1);
-    double biases[] = 
+    float biases[] = 
     {/* b0 */
      1,
      /* b1 */
@@ -511,7 +519,7 @@ void SRCNN::testTranspose()
     int kernel_c = 3;
     int kernel_h = 3;
     int kernel_w = 3;
-    double testKernel[] = 
+    float testKernel[] = 
     {
         /* filter w0 */
         /* channel 0 */
@@ -542,11 +550,11 @@ void SRCNN::testTranspose()
         -1, -1, 1
     };
 
-    double *filters_transposed = new double[getTotalDimension(filtersDim)];
+    float *filters_transposed = new float[getTotalDimension(filtersDim)];
     int filters_transposed_h = kernel_c * kernel_h * kernel_w;
     int filters_transposed_w = kernel_num;
 
-    double *result = new double[getTotalDimension(filtersDim)];
+    float *result = new float[getTotalDimension(filtersDim)];
     int result_h = kernel_num;
     int result_w = kernel_c * kernel_h * kernel_w;
 
@@ -582,15 +590,15 @@ void SRCNN::testReadAndTranspose()
     KernelDim conv1WeightsDim = make_tuple(64, 1, 9, 9);
     KernelDim conv2WeightsDim = make_tuple(32, 64, 5, 5);
     KernelDim conv3WeightsDim = make_tuple(1, 32, 5, 5);
-    double *conv1Weights = new double[getTotalDimension(conv1WeightsDim)];
-    double *conv1Weights_transposed = new double[getTotalDimension(conv1WeightsDim)];
-    double *conv1Weights_tt = new double[getTotalDimension(conv1WeightsDim)];
-    double *conv2Weights = new double[getTotalDimension(conv2WeightsDim)];
-    double *conv2Weights_transposed = new double[getTotalDimension(conv2WeightsDim)];
-    double *conv2Weights_tt = new double[getTotalDimension(conv2WeightsDim)];
-    double *conv3Weights = new double[getTotalDimension(conv3WeightsDim)];
-    double *conv3Weights_transposed = new double[getTotalDimension(conv3WeightsDim)];
-    double *conv3Weights_tt = new double[getTotalDimension(conv3WeightsDim)];
+    float *conv1Weights = new float[getTotalDimension(conv1WeightsDim)];
+    float *conv1Weights_transposed = new float[getTotalDimension(conv1WeightsDim)];
+    float *conv1Weights_tt = new float[getTotalDimension(conv1WeightsDim)];
+    float *conv2Weights = new float[getTotalDimension(conv2WeightsDim)];
+    float *conv2Weights_transposed = new float[getTotalDimension(conv2WeightsDim)];
+    float *conv2Weights_tt = new float[getTotalDimension(conv2WeightsDim)];
+    float *conv3Weights = new float[getTotalDimension(conv3WeightsDim)];
+    float *conv3Weights_transposed = new float[getTotalDimension(conv3WeightsDim)];
+    float *conv3Weights_tt = new float[getTotalDimension(conv3WeightsDim)];
     
     readConvWeights(this->weights[0], conv1Weights); cout << "weight[0]" << endl;
     readConvWeights(this->weights[1], conv2Weights, true); cout << "weight[1]" << endl;
@@ -612,9 +620,9 @@ void SRCNN::testReadAndTranspose()
 }
 
 // standard convolution
-void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
-    ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride/* = 1*/,
-    double *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/)
+void SRCNN::convolution(float *input, float *output, ImageDim inputDim,
+    ImageDim outputDim, float *kernels, KernelDim kernelDim, int stride/* = 1*/,
+    float *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/)
 {
     int kernelOutputChannel = get<0>(kernelDim);
     int kernelInputChannel = get<1>(kernelDim);
@@ -637,7 +645,7 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     // where N = out_h * out_w
     int input_col_height = kernelHeight * kernelWidth * inputChannel;
     int input_col_width = outputHeight * outputWidth;
-    double *input_col = new double[input_col_height * input_col_width];
+    float *input_col = new float[input_col_height * input_col_width];
 
     int padding = kernelHeightSize; // temporary setting, may be changed in the future
 
@@ -689,8 +697,8 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
 /* From Berkeley Vision's Caffe!
  * https://github.com/BVLC/caffe/blob/master/LICENSE
  */
-void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
-                   int stride, int pad, double *data_col)
+void SRCNN::im2col(float *data_im, ImageDim imageDim, KernelDim kernelDim,
+                   int stride, int pad, float *data_col)
 {
     int imageHeight = get<1>(imageDim);
     int imageWidth = get<2>(imageDim);
@@ -720,8 +728,8 @@ void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
     }
 }
 
-void SRCNN::col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
-                int stride, int pad, double *data_im)
+void SRCNN::col2im(float *data_col, ImageDim imageDim, KernelDim kernelDim,
+                int stride, int pad, float *data_im)
 {
     int imageHeight = get<1>(imageDim);
     int imageWidth = get<2>(imageDim);
@@ -744,7 +752,7 @@ void SRCNN::col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
                 int im_row = h_offset + h * stride;
                 int im_col = w_offset + w * stride;
                 int col_idx = (c * col_height + h) * col_width + w;
-                double value = data_col[col_idx];
+                float value = data_col[col_idx];
                 col2imAddPixel(data_im, imageDim, im_row, im_col,
                                c_im, pad, value);
             }
@@ -752,7 +760,7 @@ void SRCNN::col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
     }
 }
 
-double SRCNN::im2colGetPixel(double *im, ImageDim imageDim, 
+float SRCNN::im2colGetPixel(float *im, ImageDim imageDim, 
                              int row, int col, int channel, int pad)
 {
     int height = get<1>(imageDim);
@@ -777,8 +785,8 @@ double SRCNN::im2colGetPixel(double *im, ImageDim imageDim,
     return im[col + width * (row + height * channel)];
 }
 
-void SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
-                           int row, int col, int channel, int pad, double value)
+void SRCNN::col2imAddPixel(float *im, ImageDim imageDim,
+                           int row, int col, int channel, int pad, float value)
 {   
     int height = get<1>(imageDim);
     int width = get<2>(imageDim);
@@ -795,7 +803,7 @@ void SRCNN::col2imAddPixel(double *im, ImageDim imageDim,
     im[col + width * (row + height * channel)] += value;
 }
 
-void SRCNN::matMul(double *out, double *kernel, double *in, double *bias,
+void SRCNN::matMul(float *out, float *kernel, float *in, float *bias,
                    int kernel_row, int kernel_col, int in_row, int in_col)
 {
     if(bias == NULL)
@@ -810,7 +818,7 @@ void SRCNN::matMul(double *out, double *kernel, double *in, double *bias,
     }
 }
  
-void SRCNN::naiveGEMM(double *out, double *kernel, double *in,
+void SRCNN::naiveGEMM(float *out, float *kernel, float *in,
                       int kernel_row, int kernel_col, int in_row, int in_col)
 {
      /* The output matrix dimension will be kernel_row * in_col */
@@ -830,7 +838,7 @@ void SRCNN::naiveGEMM(double *out, double *kernel, double *in,
     }
 }
 
-void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
+void SRCNN::naiveGEMM_addBias(float *out, float *kernel, float *in, float *bias,
                               int kernel_row, int kernel_col, int in_row, int in_col)
 {
     /* The output matrix dimension will be kernel_row * in_col */
@@ -851,7 +859,7 @@ void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *b
     }
 }
 
-void SRCNN::transpose(double *out, double *in, int in_row, int in_col)
+void SRCNN::transpose(float *out, float *in, int in_row, int in_col)
 {
     for(int i = 0; i < in_row; i++)
     {
@@ -862,7 +870,7 @@ void SRCNN::transpose(double *out, double *in, int in_row, int in_col)
     }
 }
 
-void SRCNN::activation(double *input, double *output, ImageDim inputDim, ACTIVATION activationType)
+void SRCNN::activation(float *input, float *output, ImageDim inputDim, ACTIVATION activationType)
 {
     switch(activationType)
     {
@@ -888,7 +896,7 @@ void SRCNN::activation(double *input, double *output, ImageDim inputDim, ACTIVAT
     }
 }
 
-void SRCNN::readConvWeights(string filename, double *kernel, bool special/* = false*/, bool isReverse/* = false*/)
+void SRCNN::readConvWeights(string filename, float *kernel, bool special/* = false*/, bool isReverse/* = false*/)
 {
     ifstream input(filename);
     if(!input.is_open())
@@ -927,7 +935,7 @@ void SRCNN::readConvWeights(string filename, double *kernel, bool special/* = fa
     input.close();
 }
 
-void SRCNN::readBiasWeights(string filename, double *kernel)
+void SRCNN::readBiasWeights(string filename, float *kernel)
 {
     ifstream input(filename);
     if(!input.is_open())
@@ -950,9 +958,9 @@ void SRCNN::readBiasWeights(string filename, double *kernel)
     input.close();
 }
 
-void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
-    ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride/* = 1*/,
-    double *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/,
+void SRCNN::testConvolution(float *input, float *output, ImageDim inputDim,
+    ImageDim outputDim, float *kernels, KernelDim kernelDim, int stride/* = 1*/,
+    float *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/,
     string outputConvWeightPath, string outputBiasWeightPath)
 {
     int kernelInputChannel = get<0>(kernelDim);
@@ -995,7 +1003,7 @@ void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
             {
                 for(int j = 0; j < inputWidth; j += stride)
                 {
-                    double sum = 0.0;
+                    float sum = 0.0;
                     for(int l = -kernelHeightSize; l <= kernelHeightSize; l++)
                     {
                         for(int m = -kernelWidthSize; m <= kernelWidthSize; m++)
@@ -1053,7 +1061,7 @@ void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
     */
 }
 
-void SRCNN::testReadConvWeights(string filename, string outputfile, double *kernel, bool special/* = false*/, bool isReverse/* = false*/)
+void SRCNN::testReadConvWeights(string filename, string outputfile, float *kernel, bool special/* = false*/, bool isReverse/* = false*/)
 {
     ifstream input(filename);
     if(!input.is_open())
@@ -1102,7 +1110,7 @@ void SRCNN::testReadConvWeights(string filename, string outputfile, double *kern
     output.close();
 }
 
-void SRCNN::testReadBiasWeights(string filename, string outputfile, double *kernel)
+void SRCNN::testReadBiasWeights(string filename, string outputfile, float *kernel)
 {
     ifstream input(filename);
     if(!input.is_open())
