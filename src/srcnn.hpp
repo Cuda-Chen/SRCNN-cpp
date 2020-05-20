@@ -32,6 +32,7 @@ public:
     void testConv1Channel();
     void testConv3Channels();
     void testTranspose();
+    void testReadAndTranspose();
 
 private:
     int scale = 2;

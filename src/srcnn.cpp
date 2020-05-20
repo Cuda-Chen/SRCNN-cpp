@@ -577,6 +577,40 @@ void SRCNN::testTranspose()
     delete [] result;
 }
 
+void SRCNN::testReadAndTranspose()
+{
+    KernelDim conv1WeightsDim = make_tuple(64, 1, 9, 9);
+    KernelDim conv2WeightsDim = make_tuple(32, 64, 5, 5);
+    KernelDim conv3WeightsDim = make_tuple(1, 32, 5, 5);
+    double *conv1Weights = new double[getTotalDimension(conv1WeightsDim)];
+    double *conv1Weights_transposed = new double[getTotalDimension(conv1WeightsDim)];
+    double *conv1Weights_tt = new double[getTotalDimension(conv1WeightsDim)];
+    double *conv2Weights = new double[getTotalDimension(conv2WeightsDim)];
+    double *conv2Weights_transposed = new double[getTotalDimension(conv2WeightsDim)];
+    double *conv2Weights_tt = new double[getTotalDimension(conv2WeightsDim)];
+    double *conv3Weights = new double[getTotalDimension(conv3WeightsDim)];
+    double *conv3Weights_transposed = new double[getTotalDimension(conv3WeightsDim)];
+    double *conv3Weights_tt = new double[getTotalDimension(conv3WeightsDim)];
+    
+    readConvWeights(this->weights[0], conv1Weights); cout << "weight[0]" << endl;
+    readConvWeights(this->weights[1], conv2Weights, true); cout << "weight[1]" << endl;
+    readConvWeights(this->weights[2], conv3Weights, false, true); cout << "weight[2]" << endl;
+
+    int conv1_row = 64, conv1_col = 1*9*9;
+    transpose(conv1Weights_transposed, conv1Weights, conv1_row, conv1_col);
+    transpose(conv1Weights_tt, conv1Weights_transposed, conv1_col, conv1_row);
+    for(int i = 0; i < conv1_row; i++)
+    {
+        for(int j = 0; j < conv1_col; j++)
+        {
+            if(conv1Weights_tt[i * conv1_col + j] != conv1Weights[i * conv1_col + j])
+            {
+                cout << "index " << i * conv1_col + j << " not same after transpose and transpose" << endl; 
+            }
+        }
+    }
+}
+
 // standard convolution
 void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride/* = 1*/,
