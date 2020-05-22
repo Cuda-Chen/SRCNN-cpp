@@ -89,7 +89,9 @@ private:
         float *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), 
         std::string outputConvWeightPath = NULL, std::string outputBiasWeightPath = NULL);
     void testReadConvWeights(std::string filename, std::string outputfile, float *weights, bool special = false, bool isReverse = false);
-    void testReadBiasWeights(std::string filename, std::string outputfile, float *weights);
+    void testReadBiasWeights(std::string filename, std::string outputfile, float *weights);    
+    void testWriteWeights(std::string outputfile, float *weights, ImageDim imageDim);
+    void testWriteWeights(std::string outputfile, float *weights, KernelDim kernelDim);
 };
 
 #endif

@@ -100,9 +100,9 @@ void SRCNN::generate(string filename)
 
     // conv1 (feature extraction)
     cout << "conv1" << endl;
-    /*transpose(conv1Weights_transposed, conv1Weights, getTotalDimension(conv1WeightsDim) / get<0>(conv1WeightsDim), get<0>(conv1WeightsDim));
-    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights_transposed, conv1WeightsDim, 1, bias1Weights, bias1Dim);*/
-    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+    transpose(conv1Weights_transposed, conv1Weights, getTotalDimension(conv1WeightsDim) / get<0>(conv1WeightsDim), get<0>(conv1WeightsDim));
+    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights_transposed, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+    //convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
     /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
         "myConv1Weight.txt", "myBias1Weight.txt");*/
     activation(conv1Data, conv1Data, conv1Dim, RELU);
@@ -129,6 +129,7 @@ void SRCNN::generate(string filename)
     cout << "conv2" << endl;
     transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
     convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
@@ -153,9 +154,9 @@ void SRCNN::generate(string filename)
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
-    /*transpose(conv3Weights_transposed, conv3Weights, getTotalDimension(conv3WeightsDim) / get<0>(conv3WeightsDim), get<0>(conv3WeightsDim));
-    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights_transposed, conv3WeightsDim, 1, bias3Weights, bias3Dim);*/
-    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+    transpose(conv3Weights_transposed, conv3Weights, getTotalDimension(conv3WeightsDim) / get<0>(conv3WeightsDim), get<0>(conv3WeightsDim));
+    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights_transposed, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+    //convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
     /*testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
         "myConv3Weight.txt", "myBias3Weight.txt");*/
     //activation(conv3Data, conv3Data, conv3Dim, RELU);
@@ -202,6 +203,14 @@ void SRCNN::generate(string filename)
     Mat SRCNN(outputHeight, outputWidth, CV_32FC1, dst);
     //Mat SRCNN(outputHeight, outputWidth, CV_64FC1, conv3Data);
     this->output = SRCNN;
+
+    // dump weights
+    testWriteWeights("myWeightConv1Dump", conv1Weights_transposed, conv1WeightsDim);
+    testWriteWeights("myWeightConv2Dump", conv2Weights_transposed, conv2WeightsDim);
+    testWriteWeights("myWeightConv3Dump", conv3Weights_transposed, conv3WeightsDim);
+    testWriteWeights("myWeightBias1Dump", bias1Weights, bias1Dim);
+    testWriteWeights("myWeightBias2Dump", bias2Weights, bias2Dim);
+    testWriteWeights("myWeightBias3Dump", bias3Weights, bias3Dim);
 
     delete [] input;
     delete [] conv1Data;
@@ -770,17 +779,19 @@ float SRCNN::im2colGetPixel(float *im, ImageDim imageDim,
     col -= pad;
 
     // zero padding
+    #if 0
     if(row < 0 || col < 0 || row >= height || col >= width)
     {
         return 0;
     }
+#endif
     // reflect padding
-#if 0
+//#if 0
     if(row < 0) row = 0;
     if(col < 0) col = 0;
     if(row >= height) row = height - 1;
     if(col >= width) col = width - 1;
-#endif
+//#endif
 
     return im[col + width * (row + height * channel)];
 }
@@ -1140,4 +1151,30 @@ void SRCNN::testReadBiasWeights(string filename, string outputfile, float *kerne
 
     input.close();
     output.close();
+}
+
+void SRCNN::testWriteWeights(std::string outputfile, float *weights, ImageDim imageDim)
+{
+    ofstream out;
+    out.open(outputfile);
+
+    for(int i = 0; i < getTotalDimension(imageDim); i++)
+    {
+        out << weights[i] << endl;
+    }
+
+    out.close();
+}
+
+void SRCNN::testWriteWeights(std::string outputfile, float *weights, KernelDim kernelDim)
+{
+    ofstream out;
+    out.open(outputfile);
+
+    for(int i = 0; i < getTotalDimension(kernelDim); i++)
+    {
+        out << weights[i] << endl;
+    }
+
+    out.close();
 }
