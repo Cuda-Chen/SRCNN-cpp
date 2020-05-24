@@ -33,6 +33,7 @@ public:
     void testConv3Channels();
     void testTranspose();
     void testReadAndTranspose();
+    void testReadWeightFormat();
 
 private:
     int scale = 2;
@@ -41,6 +42,12 @@ private:
     cv::Mat downsample;
     cv::Mat bicubic;
     cv::Mat output;
+    enum WeightFormat
+    {
+        NCHW,
+        NHWC,
+        CHWN
+    };
 
     std::string basePath = "./model/";
     //std::string basePath = "./";
@@ -81,6 +88,7 @@ private:
     }
 
     void readConvWeights(std::string filename, float *weights, bool special = false, bool isReverse = false);
+    void readConvWeights(std::string filename, float *weights, KernelDim kernelDim, WeightFormat format, bool special = false);
     void readBiasWeights(std::string filename, float *weights);
 
     // unit test functions

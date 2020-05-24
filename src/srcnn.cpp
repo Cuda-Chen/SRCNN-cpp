@@ -3,6 +3,7 @@
 #include <string>
 #include <tuple>
 #include <fstream>
+#include <cassert>
 
 #include "opencv2/opencv.hpp"
 #include "srcnn.hpp"
@@ -628,6 +629,13 @@ void SRCNN::testReadAndTranspose()
     }
 }
 
+void SRCNN::testReadWeightFormat()
+{
+    KernelDim kernelDim = make_tuple(32, 64, 5, 5);
+    float *weight = new float[getTotalDimension(kernelDim)];
+    readConvWeights(this->weights[1], weight, kernelDim, CHWN, true);
+}
+
 // standard convolution
 void SRCNN::convolution(float *input, float *output, ImageDim inputDim,
     ImageDim outputDim, float *kernels, KernelDim kernelDim, int stride/* = 1*/,
@@ -941,6 +949,55 @@ void SRCNN::readConvWeights(string filename, float *kernel, bool special/* = fal
         {
             input >> kernel[i];
         }
+    }
+
+    input.close();
+}
+
+void SRCNN::readConvWeights(string filename, float *kernel, KernelDim kernelDim, WeightFormat format, bool special)
+{
+    ifstream input(filename);
+    if(!input.is_open())
+    {
+        cerr << "file " << filename << " opened unsuccessfully" << endl;
+        exit(1);
+    }
+
+    int currentChannels = 1;
+    if(special)
+    {
+        input >> currentChannels;
+    }
+
+    int kernelSizeSquare;
+    input >> kernelSizeSquare;
+
+    int nextChannels = 1;
+    input >> nextChannels;
+
+    int totalSize = currentChannels * kernelSizeSquare * nextChannels;
+    assert(totalSize == getTotalDimension(kernelDim));
+
+    switch(format)
+    {
+        case NCHW:
+            cout << "nchw" << endl;
+            break;
+        case NHWC:
+            cout << "nhwc" << endl;
+            break;
+        case CHWN:
+            cout << "chwn" << endl;
+            break;
+        default:
+            cerr << "no such format" << endl;
+            exit(1);
+            break;
+    }
+ 
+    for(int i = 0; i < currentChannels * kernelSizeSquare * nextChannels; i++)
+    {
+        input >> kernel[i];
     }
 
     input.close();
