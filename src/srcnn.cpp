@@ -56,7 +56,7 @@ void SRCNN::generate(string filename)
     {
         for(int j = 0; j < inputWidth; j++)
         {
-            input[(i * inputWidth) + j] = this->bicubic.at<uchar>(i, j) / 255.0;
+            input[(i * inputWidth) + j] = (float)this->bicubic.at<uchar>(i, j) / 255.0;
             dst[(i * inputWidth) + j] = 0;
         }
     }
@@ -339,6 +339,8 @@ void SRCNN::testImageConv(string filename)
     waitKey(0);
 
     convolution(input, output, inputDim, outputDim, kernel_float, kernelDim); 
+    /*testConvolution(input, output, inputDim, outputDim, kernel_float, kernelDim, 1, NULL, std::make_tuple(0, 0, 0),
+                    "deadbeef", "deadbeef");*/
     int counter = 0;
     for(int i = 0; i < height; i++)
     {
@@ -393,6 +395,9 @@ void SRCNN::testConv1Channel()
     convolution(input, output, inputDim, outputDim,
                 kernel, kernelDim, 1, bias, 
                 biasDim);
+    /*testConvolution(input, output, inputDim, outputDim,
+                    kernel, kernelDim, 1, bias, biasDim,
+                    "deadbeef", "deadmilk");*/
 
     // print the convoluted result
     int outputHeight = get<1>(outputDim);
@@ -502,7 +507,9 @@ void SRCNN::testConv3Channels()
     convolution(input, output, inputDim,
                 outputDim, filters, filtersDim, 2,
                 biases, biasesDim);
-
+    /*testConvolution(input, output, inputDim,
+                outputDim, filters, filtersDim, 2,
+                biases, biasesDim, "deadbeef", "deadmilk");*/
     // print the convoluted result
     for(int i = 0; i < get<0>(outputDim); i++)
     {
@@ -799,19 +806,19 @@ float SRCNN::im2colGetPixel(float *im, ImageDim imageDim,
     col -= pad;
 
     // zero padding
-    #if 0
+    //#if 0
     if(row < 0 || col < 0 || row >= height || col >= width)
     {
         return 0;
     }
-#endif
+//#endif
     // reflect padding
-//#if 0
+#if 0
     if(row < 0) row = 0;
     if(col < 0) col = 0;
     if(row >= height) row = height - 1;
     if(col >= width) col = width - 1;
-//#endif
+#endif
 
     return im[col + width * (row + height * channel)];
 }
@@ -876,6 +883,7 @@ void SRCNN::naiveGEMM_addBias(float *out, float *kernel, float *in, float *bias,
 
     for(int i = 0; i < kernel_row; i++)
     {
+        cout << "working on output conv layer " << i << endl;
         for(int j = 0; j < in_col; j++)
         {
             out[i * in_col + j] = 0;
@@ -1099,10 +1107,10 @@ void SRCNN::testConvolution(float *input, float *output, ImageDim inputDim,
     float *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/,
     string outputConvWeightPath, string outputBiasWeightPath)
 {
-    int kernelInputChannel = get<0>(kernelDim);
-    int kernelHeight = get<1>(kernelDim);
-    int kernelWidth = get<2>(kernelDim);
-    int kernelOutputChannel = get<3>(kernelDim);
+    int kernelOutputChannel = get<0>(kernelDim);
+    int kernelInputChannel = get<1>(kernelDim);
+    int kernelHeight = get<2>(kernelDim);
+    int kernelWidth = get<3>(kernelDim);
     int kernelHeightSize = kernelHeight / 2;
     int kernelWidthSize = kernelWidth / 2;
 
@@ -1113,9 +1121,8 @@ void SRCNN::testConvolution(float *input, float *output, ImageDim inputDim,
     int outputChannel = get<0>(outputDim);
     int outputHeight = get<1>(outputDim);
     int outputWidth = get<2>(outputDim);
-
-    /*
-    cout << outputConvWeightPath << endl;
+    
+    /*cout << outputConvWeightPath << endl;
     ofstream outputConvWeight(outputConvWeightPath);
     if(!outputConvWeight.is_open())
     {
@@ -1128,8 +1135,8 @@ void SRCNN::testConvolution(float *input, float *output, ImageDim inputDim,
     {
         cout << "bias weight unsuccessful" << endl;
         exit(1);
-    }
-    */
+    }*/
+    
 
     for(int k = 0; k < outputChannel; k++)
     {
@@ -1147,7 +1154,7 @@ void SRCNN::testConvolution(float *input, float *output, ImageDim inputDim,
                             int y = i + l;
                             int x = j + m;
 
-                            // zero padding
+                            // valid padding
                             x = x >= 0 ? (x < inputWidth ? x : inputWidth - stride) : 0;
                             y = y >= 0 ? (y < inputHeight ? y : inputHeight - stride) : 0;
                         
@@ -1156,10 +1163,13 @@ void SRCNN::testConvolution(float *input, float *output, ImageDim inputDim,
                                         ((l + kernelHeight) * kernelWidth) + 
                                         (m + kernelWidth)];*/
                                 int inputIdx = (n * inputHeight * inputWidth) + (y * inputWidth) + x;
-                                int kernelIdx = (((n) * kernelHeight + 
+                                /*int kernelIdx = (((n) * kernelHeight + 
                                             (l + kernelHeight)) * kernelWidth + 
                                             (m + kernelWidth)) * kernelOutputChannel + 
-                                            k;
+                                            k;*/
+                                int kernelIdx = ((k * kernelInputChannel + n) 
+                                                * kernelHeight + (l + kernelHeightSize))
+                                                * kernelWidth + (m + kernelWidthSize);
                                 sum += input[inputIdx] * kernels[kernelIdx]; 
                                 
                                 //outputConvWeight << kernels[kernelIdx] << " ";
@@ -1184,17 +1194,17 @@ void SRCNN::testConvolution(float *input, float *output, ImageDim inputDim,
             {
                 for(int j = 0; j < outputWidth; j++)
                 {
-                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += bias[(k * get<1>(biasDim) * get<2>(biasDim))];
+                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += bias[k];
                     //outputBiasWeight << bias[(k * get<1>(biasDim) * get<2>(biasDim))] << " ";
                 }
             }
         }
     }
 
-    /*
-    outputConvWeight.close();
-    outputBiasWeight.close();
-    */
+    
+    /*outputConvWeight.close();
+    outputBiasWeight.close();*/
+    
 }
 
 void SRCNN::testReadConvWeights(string filename, string outputfile, float *kernel, bool special/* = false*/, bool isReverse/* = false*/)
