@@ -15,10 +15,10 @@ int main(int argc, char **argv)
 
     SRCNN srcnn;
     
-    /*srcnn.checkWeightStatus();
+    srcnn.checkWeightStatus();
     srcnn.generate(filename);
-    //srcnn.showOutput();
-    srcnn.outputImage();*/
+    srcnn.showOutput();
+    //srcnn.outputImage();
     
     //srcnn.testImageConv(filename);
     //srcnn.testConv();
@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     //srcnn.generate(filename);
     //srcnn.showOutput();
     //srcnn.testReadAndTranspose();
-    srcnn.testReadWeightFormat();
+    //srcnn.testReadWeightFormat();
 
     return 0;
 }

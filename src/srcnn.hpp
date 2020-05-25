@@ -46,7 +46,8 @@ private:
     {
         NCHW,
         NHWC,
-        CHWN
+        CHWN,
+        NCWH
     };
 
     std::string basePath = "./model/";
