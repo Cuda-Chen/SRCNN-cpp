@@ -105,7 +105,7 @@ void SRCNN::generate(string filename)
     /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
         "myConv1Weight.txt", "myBias1Weight.txt");*/
     activation(conv1Data, conv1Data, conv1Dim, RELU);
-//#if 0 
+#if 0 
     float *conv1arr = new float[get<1>(conv1Dim) * get<2>(conv1Dim)];
     for(int i = 0; i < get<0>(conv1Dim); i++)
     {
@@ -122,17 +122,17 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv1);
     }
     delete [] conv1arr;
-//#endif
+#endif
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
-    /*transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);*/
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
+    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
-//#if 0
+#if 0
     float *conv2arr = new float[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
@@ -149,7 +149,7 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv2);
     }
     delete [] conv2arr;
-//#endif
+#endif
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
@@ -170,14 +170,16 @@ void SRCNN::generate(string filename)
                 conv3arr[j * get<2>(conv3Dim) + k] = (unsigned char) (conv3Data[(i * get<1>(conv3Dim) + j) *
                                                      get<2>(conv3Dim) + k] * 255.0f);
                 if(conv3arr[j * get<2>(conv3Dim) + k] > 255) conv3arr[j * get<2>(conv3Dim) + k] = 255;
+                //cout << (int)conv3arr[j * get<2>(conv3Dim) + k] << endl;
+                cout << conv3Data[(i * get<1>(conv3Dim) + j) * get<2>(conv3Dim) + k] << endl;
             }
         }
         Mat conv3(get<1>(conv3Dim), get<2>(conv3Dim), CV_8UC1, conv3arr);
         //conv3.convertTo(conv3, CV_8UC1, 255.0);
         string outputname = "conv3_" + to_string(i) + ".jpg";
-        imwrite(outputname, conv3);
+        //imwrite(outputname, conv3);
     }
-    delete [] conv3arr;
+    //delete [] conv3arr;
 //#endif
 
     cout << "prepare output" << endl;
@@ -186,7 +188,8 @@ void SRCNN::generate(string filename)
         for(int j = 0; j < outputWidth; j++)
         {
             //cout << i << " " << j << " fine" << endl;
-            dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
+            dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j] * 255;
+            //cout << dst[(i * outputWidth) + j] << endl;
             //dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
 #if 0
             if(dst[(i * outputWidth) + j] != 0)
@@ -199,7 +202,9 @@ void SRCNN::generate(string filename)
 
     // copy to output OpenCV Mat
     cout << "copy to output OpenCV Mat" << endl;
-    Mat SRCNN(outputHeight, outputWidth, CV_32FC1, dst);
+    //Mat SRCNN(outputHeight, outputWidth, CV_32FC1, dst);
+    Mat SRCNN(outputHeight, outputWidth, CV_8UC1, conv3arr);
+    //SRCNN.convertTo(SRCNN, CV_8UC1, 255);
     //Mat SRCNN(outputHeight, outputWidth, CV_64FC1, conv3Data);
     this->output = SRCNN;
 
@@ -860,6 +865,7 @@ void SRCNN::naiveGEMM(float *out, float *kernel, float *in,
                       int kernel_row, int kernel_col, int in_row, int in_col)
 {
      /* The output matrix dimension will be kernel_row * in_col */
+    assert(kernel_col == in_row);
 
     for(int i = 0; i < kernel_row; i++)
     {
@@ -880,6 +886,7 @@ void SRCNN::naiveGEMM_addBias(float *out, float *kernel, float *in, float *bias,
                               int kernel_row, int kernel_col, int in_row, int in_col)
 {
     /* The output matrix dimension will be kernel_row * in_col */
+    assert(kernel_col == in_row);
 
     for(int i = 0; i < kernel_row; i++)
     {
