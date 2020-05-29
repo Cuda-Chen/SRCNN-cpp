@@ -653,7 +653,7 @@ void SRCNN::testReadWeightFormat()
     float *conv1Weight = new float[getTotalDimension(conv1Dim)];
     float *conv2Weight = new float[getTotalDimension(conv2Dim)];
     float *conv3Weight = new float[getTotalDimension(conv3Dim)];
-    readConvWeights(this->weights[0], conv1Weight, conv1Dim, CHWN);
+    readConvWeights(this->weights[0], conv1Weight, conv1Dim, NCWH);
     readConvWeights(this->weights[1], conv2Weight, conv2Dim, CHWN, true);
     readConvWeights(this->weights[2], conv3Weight, conv3Dim, CHWN);
 
@@ -1104,9 +1104,9 @@ void SRCNN::readConvWeights(string filename, float *kernel, KernelDim kernelDim,
             {
                 for(int c = 0; c < num_channel; c++)
                 {
-                    for(int w = 0; w < num_width; w++)
+                    for(int h = 0; h < num_height; h++)
                     {
-                        for(int h = 0; h < num_height; h++)
+                        for(int w = 0; w < num_width; w++)
                         {
                             input >> kernel[((n * num_channel + c) * num_width + w) * num_height + h];
                             cout << "index " << ((n * num_channel + c) * num_width + w) * num_height + h
