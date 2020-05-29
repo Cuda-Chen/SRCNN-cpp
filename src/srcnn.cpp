@@ -90,12 +90,18 @@ void SRCNN::generate(string filename)
     readBiasWeights(this->weights[4], bias2Weights); cout << "weight[4]" << endl;
     readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl; */
 
-    readConvWeights(this->weights[0], conv1Weights, conv1WeightsDim, NCWH, false); cout << "weight[0]" << endl;
+    readConvWeights(this->weights[0], conv1Weights, conv1WeightsDim, NCHW, false); cout << "weight[0]" << endl;
     readConvWeights(this->weights[1], conv2Weights, conv2WeightsDim, CHWN, true); cout << "weight[1]" << endl;
+    transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
     readConvWeights(this->weights[2], conv3Weights, conv3WeightsDim, CHWN, false); cout << "weights[2]" << endl;
     readBiasWeights(this->weights[3], bias1Weights); cout << "weight[3]" << endl;
     readBiasWeights(this->weights[4], bias2Weights); cout << "weight[4]" << endl;
-    readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl; 
+    readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl;
+
+    // weight format write test
+    testWriteWeights("myWeightConv1Dump", conv1Weights, conv1WeightsDim);
+    testWriteWeights("myWeightConv2Dump", conv2Weights, conv2WeightsDim);
+    testWriteWeights("myWeightConv3Dump", conv3Weights, conv3WeightsDim);
 
     // conv1 (feature extraction)
     cout << "conv1" << endl;
@@ -126,9 +132,9 @@ void SRCNN::generate(string filename)
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
-    transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
-    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    //transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
+    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
@@ -171,7 +177,7 @@ void SRCNN::generate(string filename)
                                                      get<2>(conv3Dim) + k] * 255.0f);
                 if(conv3arr[j * get<2>(conv3Dim) + k] > 255) conv3arr[j * get<2>(conv3Dim) + k] = 255;
                 //cout << (int)conv3arr[j * get<2>(conv3Dim) + k] << endl;
-                cout << conv3Data[(i * get<1>(conv3Dim) + j) * get<2>(conv3Dim) + k] << endl;
+                //cout << conv3Data[(i * get<1>(conv3Dim) + j) * get<2>(conv3Dim) + k] << endl;
             }
         }
         Mat conv3(get<1>(conv3Dim), get<2>(conv3Dim), CV_8UC1, conv3arr);
@@ -647,13 +653,14 @@ void SRCNN::testReadWeightFormat()
     float *conv1Weight = new float[getTotalDimension(conv1Dim)];
     float *conv2Weight = new float[getTotalDimension(conv2Dim)];
     float *conv3Weight = new float[getTotalDimension(conv3Dim)];
-    readConvWeights(this->weights[0], conv1Weight, conv1Dim, NCWH);
+    readConvWeights(this->weights[0], conv1Weight, conv1Dim, CHWN);
     readConvWeights(this->weights[1], conv2Weight, conv2Dim, CHWN, true);
     readConvWeights(this->weights[2], conv3Weight, conv3Dim, CHWN);
 
-    testWriteWeights("myConv1Dump.txt", conv1Weight, conv1Dim);
-    testWriteWeights("myConv2Dump.txt", conv2Weight, conv2Dim);
-    testWriteWeights("myConv3Dump.txt", conv3Weight, conv3Dim);
+    // weight format write test
+    testWriteWeights("myWeightConv1Dump", conv1Weight, conv1Dim);
+    testWriteWeights("myWeightConv2Dump", conv2Weight, conv2Dim);
+    testWriteWeights("myWeightConv3Dump", conv3Weight, conv3Dim);
 
     delete [] conv1Weight;
     delete [] conv2Weight;
@@ -1024,6 +1031,9 @@ void SRCNN::readConvWeights(string filename, float *kernel, KernelDim kernelDim,
                         for(int w = 0; w < num_width; w++)
                         {
                             input >> kernel[((n * num_channel + c) * num_height + h) * num_width + w];
+                            cout << "index " << ((n * num_channel + c) * num_height + h) * num_width + w << " n " << n << " c " << c
+                                << " h " << h << " w " << w << " " << kernel[((n * num_channel + c) * num_height + h) * num_width + w]
+                                << endl;
                         }
                     }
                 }
@@ -1047,15 +1057,42 @@ void SRCNN::readConvWeights(string filename, float *kernel, KernelDim kernelDim,
             break;
         case CHWN:
             cout << "chwn" << endl;
-            for(int c = 0; c < num_channel; c++)
+            /*for(int n = 0; n < num_filter; n++)
+            {
+                for(int w = 0; w < num_width; w++)
+                {
+                    for(int h = 0; h < num_height; h++)
+                    {
+                        for(int c = 0; c < num_channel; c++)
+                        {
+                            //input >> kernel[((c * num_height + h) * num_width + w) * num_filter + n];
+                            cout << "index " << ((c * num_height + h) * num_width + w) * num_filter + n 
+                                << " c " << c
+                                << " h " << h 
+                                << " w " << w 
+                                << " n " << n 
+                                //<< " " << kernel[((c * num_height + h) * num_width + w) * num_filter + n]
+                                << endl;
+                        }
+                    }
+                }
+            }*/
+            for(int n = 0; n < num_filter; n++)
             {
                 for(int h = 0; h < num_height; h++)
                 {
                     for(int w = 0; w < num_width; w++)
                     {
-                        for(int n = 0; n < num_filter; n++)
+                        for(int c = 0; c < num_channel; c++)
                         {
                             input >> kernel[((c * num_height + h) * num_width + w) * num_filter + n];
+                            cout << "index " << ((c * num_height + h) * num_width + w) * num_filter + n 
+                                << " c " << c
+                                << " h " << h 
+                                << " w " << w 
+                                << " n " << n 
+                                << " " << kernel[((c * num_height + h) * num_width + w) * num_filter + n]
+                                << endl;
                         }
                     }
                 }
@@ -1072,6 +1109,13 @@ void SRCNN::readConvWeights(string filename, float *kernel, KernelDim kernelDim,
                         for(int h = 0; h < num_height; h++)
                         {
                             input >> kernel[((n * num_channel + c) * num_width + w) * num_height + h];
+                            cout << "index " << ((n * num_channel + c) * num_width + w) * num_height + h
+                                << " n " << n
+                                << " c " << c
+                                << " w " << w
+                                << " h " << h
+                                << " " << kernel[((n * num_channel + c) * num_width + w) * num_height + h]
+                                << endl;
                         }
                     }
                 }
