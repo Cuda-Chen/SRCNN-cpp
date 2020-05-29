@@ -8,7 +8,6 @@ macx{
     QMAKE_CXXFLAGS += -fopenmp
     INCLUDEPATH += -I/usr/local/opt/llvm/include
     LIBS += -L/usr/local/opt/llvm/lib -lomp
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 }
 #OpenMP on Windows
 win32: QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
