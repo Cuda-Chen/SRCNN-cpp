@@ -90,7 +90,7 @@ void SRCNN::generate(string filename)
     readBiasWeights(this->weights[4], bias2Weights); cout << "weight[4]" << endl;
     readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl; */
 
-    readConvWeights(this->weights[0], conv1Weights, conv1WeightsDim, NCHW, false); cout << "weight[0]" << endl;
+    readConvWeights(this->weights[0], conv1Weights, conv1WeightsDim, NCWH, false); cout << "weight[0]" << endl;
     readConvWeights(this->weights[1], conv2Weights, conv2WeightsDim, CHWN, true); cout << "weight[1]" << endl;
     transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
     readConvWeights(this->weights[2], conv3Weights, conv3WeightsDim, CHWN, false); cout << "weights[2]" << endl;
@@ -99,9 +99,9 @@ void SRCNN::generate(string filename)
     readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl;
 
     // weight format write test
-    testWriteWeights("myWeightConv1Dump", conv1Weights, conv1WeightsDim);
-    testWriteWeights("myWeightConv2Dump", conv2Weights, conv2WeightsDim);
-    testWriteWeights("myWeightConv3Dump", conv3Weights, conv3WeightsDim);
+    testWriteWeights("myWeightConv1Dump_gen", conv1Weights, conv1WeightsDim);
+    testWriteWeights("myWeightConv2Dump_gen", conv2Weights_transposed, conv2WeightsDim);
+    testWriteWeights("myWeightConv3Dump_gen", conv3Weights, conv3WeightsDim);
 
     // conv1 (feature extraction)
     cout << "conv1" << endl;
@@ -111,7 +111,7 @@ void SRCNN::generate(string filename)
     /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
         "myConv1Weight.txt", "myBias1Weight.txt");*/
     activation(conv1Data, conv1Data, conv1Dim, RELU);
-#if 0 
+//#if 0 
     float *conv1arr = new float[get<1>(conv1Dim) * get<2>(conv1Dim)];
     for(int i = 0; i < get<0>(conv1Dim); i++)
     {
@@ -128,17 +128,17 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv1);
     }
     delete [] conv1arr;
-#endif
+//#endif
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
     //transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
-    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
         "myConv2Weight.txt", "myBias2Weight.txt");*/
     activation(conv2Data, conv2Data, conv2Dim, RELU);
-#if 0
+//#if 0
     float *conv2arr = new float[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
@@ -155,7 +155,7 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv2);
     }
     delete [] conv2arr;
-#endif
+//#endif
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
@@ -194,7 +194,7 @@ void SRCNN::generate(string filename)
         for(int j = 0; j < outputWidth; j++)
         {
             //cout << i << " " << j << " fine" << endl;
-            dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j] * 255;
+            dst[(i * outputWidth) + j] = conv3Data[((1 - 1) * get<1>(conv3Dim) + i) * get<2>(conv3Dim) + j];
             //cout << dst[(i * outputWidth) + j] << endl;
             //dst[(i * outputWidth) + j] = conv3Data[(i * outputWidth) + j];
 #if 0
@@ -208,9 +208,9 @@ void SRCNN::generate(string filename)
 
     // copy to output OpenCV Mat
     cout << "copy to output OpenCV Mat" << endl;
-    //Mat SRCNN(outputHeight, outputWidth, CV_32FC1, dst);
-    Mat SRCNN(outputHeight, outputWidth, CV_8UC1, conv3arr);
-    //SRCNN.convertTo(SRCNN, CV_8UC1, 255);
+    Mat SRCNN(outputHeight, outputWidth, CV_32FC1, dst);
+    //Mat SRCNN(outputHeight, outputWidth, CV_8UC1, conv3arr);
+    SRCNN.convertTo(SRCNN, CV_8UC1, 255);
     //Mat SRCNN(outputHeight, outputWidth, CV_64FC1, conv3Data);
     this->output = SRCNN;
 
@@ -652,18 +652,23 @@ void SRCNN::testReadWeightFormat()
     KernelDim conv3Dim = make_tuple(1, 32, 5, 5);
     float *conv1Weight = new float[getTotalDimension(conv1Dim)];
     float *conv2Weight = new float[getTotalDimension(conv2Dim)];
+    float *conv2Weight_transposed = new float[getTotalDimension(conv2Dim)];
     float *conv3Weight = new float[getTotalDimension(conv3Dim)];
     readConvWeights(this->weights[0], conv1Weight, conv1Dim, NCWH);
     readConvWeights(this->weights[1], conv2Weight, conv2Dim, CHWN, true);
     readConvWeights(this->weights[2], conv3Weight, conv3Dim, CHWN);
 
+    transpose(conv2Weight_transposed, conv2Weight, 64*5*5, 32);
+
     // weight format write test
     testWriteWeights("myWeightConv1Dump", conv1Weight, conv1Dim);
-    testWriteWeights("myWeightConv2Dump", conv2Weight, conv2Dim);
+    //testWriteWeights("myWeightConv2Dump", conv2Weight, conv2Dim);
+    testWriteWeights("myWeightConv2Dump", conv2Weight_transposed, conv2Dim);
     testWriteWeights("myWeightConv3Dump", conv3Weight, conv3Dim);
 
     delete [] conv1Weight;
     delete [] conv2Weight;
+    delete [] conv2Weight_transposed;
     delete [] conv3Weight;
 }
 
@@ -818,19 +823,19 @@ float SRCNN::im2colGetPixel(float *im, ImageDim imageDim,
     col -= pad;
 
     // zero padding
-    //#if 0
+#if 0
     if(row < 0 || col < 0 || row >= height || col >= width)
     {
         return 0;
     }
-//#endif
+#endif
     // reflect padding
-#if 0
+//#if 0
     if(row < 0) row = 0;
     if(col < 0) col = 0;
     if(row >= height) row = height - 1;
     if(col >= width) col = width - 1;
-#endif
+//#endif
 
     return im[col + width * (row + height * channel)];
 }
