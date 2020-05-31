@@ -22,3 +22,7 @@ This implementation uses 9-5-5 architecture.
 - [x] `im2col`
 - [x] validate convolution using [this image](https://zhuanlan.zhihu.com/p/63974249)
 - [x] padding feature
+
+# Contributors
+- [Cuda-Chen](https://github.com/Cuda-Chen) Cuda Chen - creator, maintainer
+- [masc4ii](https://github.com/masc4ii) masc4ii - OpenMP and QMake utility
