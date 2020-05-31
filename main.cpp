@@ -18,13 +18,17 @@ int main(int argc, char **argv)
     srcnn.checkWeightStatus();
     srcnn.generate(filename);
     srcnn.showOutput();
+    //srcnn.outputImage();
     
     //srcnn.testImageConv(filename);
     //srcnn.testConv();
     //srcnn.testConv1Channel();
     //srcnn.testConv3Channels();
+    //srcnn.testTranspose();
     //srcnn.generate(filename);
     //srcnn.showOutput();
+    //srcnn.testReadAndTranspose();
+    //srcnn.testReadWeightFormat();
 
     return 0;
 }

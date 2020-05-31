@@ -22,6 +22,7 @@ public:
     SRCNN(std::string weights);
     void generate(std::string filename);
     void showOutput();
+    void outputImage();
     int getTotalDimension(ImageDim dim);
     int getTotalDimension(KernelDim dim);
 
@@ -30,6 +31,9 @@ public:
     void testImageConv(std::string filename);
     void testConv1Channel();
     void testConv3Channels();
+    void testTranspose();
+    void testReadAndTranspose();
+    void testReadWeightFormat();
 
 private:
     int scale = 2;
@@ -38,6 +42,13 @@ private:
     cv::Mat downsample;
     cv::Mat bicubic;
     cv::Mat output;
+    enum WeightFormat
+    {
+        NCHW,
+        NHWC,
+        CHWN,
+        NCWH
+    };
 
     std::string basePath = "./model/";
     //std::string basePath = "./";
@@ -67,7 +78,7 @@ private:
                    int kernel_row, int kernel_col, int in_row, int in_col);
     void naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
                            int kernel_row, int kernel_col, int in_row, int in_col);
-
+    void transpose(double *out, double *in, int in_row, int in_col);
 
     void activation(double *input, double *output, ImageDim inputDim, 
         ACTIVATION activationType);
@@ -78,6 +89,7 @@ private:
     }
 
     void readConvWeights(std::string filename, double *weights, bool special = false, bool isReverse = false);
+    void readConvWeights(std::string filename, double *weights, KernelDim kernelDim, WeightFormat format, bool special = false);
     void readBiasWeights(std::string filename, double *weights);
 
     // unit test functions
@@ -86,7 +98,9 @@ private:
         double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), 
         std::string outputConvWeightPath = NULL, std::string outputBiasWeightPath = NULL);
     void testReadConvWeights(std::string filename, std::string outputfile, double *weights, bool special = false, bool isReverse = false);
-    void testReadBiasWeights(std::string filename, std::string outputfile, double *weights);
+    void testReadBiasWeights(std::string filename, std::string outputfile, double *weights);    
+    void testWriteWeights(std::string outputfile, double *weights, ImageDim imageDim);
+    void testWriteWeights(std::string outputfile, double *weights, KernelDim kernelDim);
 };
 
 #endif
