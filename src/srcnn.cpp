@@ -51,6 +51,7 @@ void SRCNN::generate(string filename)
     cout << "output width height " << outputWidth << " " << outputHeight << endl;
     double *dst = new double[outputHeight * outputWidth];
     cout << "assign input and output value" << endl;
+#pragma omp parallel for
     for(int i = 0; i < inputHeight; i++)
     {
         for(int j = 0; j < inputWidth; j++)
@@ -173,6 +174,7 @@ void SRCNN::generate(string filename)
 #endif
 
     cout << "prepare output" << endl;
+#pragma omp parallel for
     for(int i = 0; i < outputHeight; i++)
     {
         for(int j = 0; j < outputWidth; j++)
@@ -287,7 +289,7 @@ void SRCNN::testImageConv(string filename)
     // Conv test
     double *kernel = new double[kernelHeight * kernelWidth];
     KernelDim kernelDim = make_tuple(1, 1, kernelHeight, kernelWidth);
-
+#pragma omp parallel for
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -308,6 +310,7 @@ void SRCNN::testImageConv(string filename)
 
     convolution(input, output, inputDim, outputDim, kernel, kernelDim); 
     int counter = 0;
+#pragma omp parallel for
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -367,6 +370,7 @@ void SRCNN::testConv1Channel()
     int outputWidth = get<2>(outputDim);
     for(int i = 0; i < get<0>(outputDim); i++)
     {
+#pragma omp parallel for
         for(int j = 0; j < outputHeight; j++)
         {
             for(int k = 0; k < outputWidth; k++)
@@ -414,6 +418,7 @@ void SRCNN::testConv3Channels()
     double *output = new double[getTotalDimension(outputDim)];
     for(int i = 0; i < outputDepth; i++)
     {
+#pragma omp parallel for
         for(int j = 0; j < outputHeight; j++)
         {
             for(int k = 0; k < outputWidth; k++)
@@ -581,6 +586,7 @@ void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
         int w_offset = c % kernelWidth;
         int h_offset = (c / kernelWidth) % kernelHeight;
         int c_im = c / kernelWidth / kernelHeight;
+#pragma omp parallel for
         for(int h = 0; h < col_height; h++)
         {
             for(int w = 0; w < col_width; w++)
@@ -612,6 +618,7 @@ void SRCNN::col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
         int w_offset = c % kernelWidth;
         int h_offset = (c / kernelWidth) % kernelHeight;
         int c_im = c / kernelWidth / kernelHeight;
+#pragma omp parallel for
         for(int h = 0; h < col_height; h++)
         {
             for(int w = 0; w < col_width; w++)
@@ -692,6 +699,7 @@ void SRCNN::naiveGEMM(double *out, double *kernel, double *in,
 
     for(int i = 0; i < kernel_row; i++)
     {
+#pragma omp parallel for
         for(int j = 0; j < in_col; j++)
         {
             out[i * in_col + j] = 0;
@@ -712,6 +720,7 @@ void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *b
 
     for(int i = 0; i < kernel_row; i++)
     {
+#pragma omp parallel for
         for(int j = 0; j < in_col; j++)
         {
             out[i * in_col + j] = 0;
@@ -855,6 +864,7 @@ void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
     {
         for(int n = 0; n < inputChannel; n++)
         {
+#pragma omp parallel for
             for(int i = 0; i < inputHeight; i += stride)
             {
                 for(int j = 0; j < inputWidth; j += stride)
@@ -900,6 +910,7 @@ void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
 
         if(bias != NULL)
         {
+#pragma omp parallel for
             for(int i = 0; i < outputHeight; i++)
             {
                 for(int j = 0; j < outputWidth; j++)
