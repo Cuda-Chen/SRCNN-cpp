@@ -2,14 +2,14 @@
 C++ implementation of SRCNN (Super-Resolution Convolutional Neural Network)
 
 # Note
-Currently I am facing the issue ringing effect of output. Any help will be 
+- Currently I am facing the issue ringing effect of output. Any help will be 
 delighted.
-
-The weight format is **CHWN** because the weights is created by cuda-convnet.
+- The weight format is **CHWN** because the weights is created by the author.
 
 # How to Build and Run
 We provide two ways to build this project: CMake and QMake
 
+## CMake
 If you just want to build the program and quickly test it, type these:
 ```
 $ mkdir build && cd build && cmake .. && make && cd ..
@@ -20,7 +20,8 @@ If you want much faster speed with OpenMP, follow these steps:
 1. Set `i_want_openmp` from `OFF` to `ON` in `CMakeLists.txt`.
 2. Follow the usual CMake building steps then run it.
 
-If you would like to use QMake just run the `SRCNN-cpp.pro`. Also, the OpenMP in QMake is ON by default.
+## QMake
+Just run the `SRCNN-cpp.pro`. Also, the OpenMP in QMake is always set to ON.
 
 # Note
 This implementation uses 9-5-5 architecture.
