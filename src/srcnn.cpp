@@ -108,11 +108,11 @@ void SRCNN::generate(string filename)
     cout << "conv1" << endl;
     //transpose(conv1Weights_transposed, conv1Weights, getTotalDimension(conv1WeightsDim) / get<0>(conv1WeightsDim), get<0>(conv1WeightsDim));
     //convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights_transposed, conv1WeightsDim, 1, bias1Weights, bias1Dim);
-    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
-    /*testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
-        "myConv1Weight.txt", "myBias1Weight.txt");*/
+    //convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+    testConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim,
+        "myConv1Weight.txt", "myBias1Weight.txt");
     activation(conv1Data, conv1Data, conv1Dim, RELU);
-#if 0 
+//#if 0 
     double *conv1arr = new double[get<1>(conv1Dim) * get<2>(conv1Dim)];
     for(int i = 0; i < get<0>(conv1Dim); i++)
     {
@@ -129,17 +129,17 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv1);
     }
     delete [] conv1arr;
-#endif
+//#endif
 
     // conv2 (non-linear mapping)
     cout << "conv2" << endl;
     //transpose(conv2Weights_transposed, conv2Weights, 64 * 5 * 5, 32);// CHWN -> NCHW
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
     //convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim);
-    /*testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
-        "myConv2Weight.txt", "myBias2Weight.txt");*/
+    testConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim, 
+        "myConv2Weight.txt", "myBias2Weight.txt");
     activation(conv2Data, conv2Data, conv2Dim, RELU);
-#if 0
+//#if 0
     double *conv2arr = new double[get<1>(conv2Dim) * get<2>(conv2Dim)];
     for(int i = 0; i < 32; i++)
     {
@@ -156,17 +156,17 @@ void SRCNN::generate(string filename)
         imwrite(outputname, conv2);
     }
     delete [] conv2arr;
-#endif
+//#endif
 
     // conv3 (reconstruction)
     cout << "conv3" << endl;
     /*transpose(conv3Weights_transposed, conv3Weights, getTotalDimension(conv3WeightsDim) / get<0>(conv3WeightsDim), get<0>(conv3WeightsDim));
     convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights_transposed, conv3WeightsDim, 1, bias3Weights, bias3Dim);*/
-    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
-    /*testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
-        "myConv3Weight.txt", "myBias3Weight.txt");*/
+    //convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+    testConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim,
+        "myConv3Weight.txt", "myBias3Weight.txt");
     //activation(conv3Data, conv3Data, conv3Dim, RELU);
-#if 0
+//#if 0
     unsigned char *conv3arr = new unsigned char[get<1>(conv3Dim) * get<2>(conv3Dim)];
     for(int i = 0; i < get<0>(conv3Dim); i++)
     {
@@ -184,10 +184,10 @@ void SRCNN::generate(string filename)
         Mat conv3(get<1>(conv3Dim), get<2>(conv3Dim), CV_8UC1, conv3arr);
         //conv3.convertTo(conv3, CV_8UC1, 255.0);
         string outputname = "conv3_" + to_string(i) + ".jpg";
-        //imwrite(outputname, conv3);
+        imwrite(outputname, conv3);
     }
     //delete [] conv3arr;
-#endif
+//#endif
 
     cout << "prepare output" << endl;
 #pragma omp parallel for
@@ -1215,6 +1215,7 @@ void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
                 for(int j = 0; j < inputWidth; j += stride)
                 {
                     double sum = 0.0;
+                    //output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = 0;
                     for(int l = -kernelHeightSize; l <= kernelHeightSize; l++)
                     {
                         for(int m = -kernelWidthSize; m <= kernelWidthSize; m++)
@@ -1245,7 +1246,7 @@ void SRCNN::testConvolution(double *input, double *output, ImageDim inputDim,
                         }
                     }
 
-                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] = sum;
+                    output[(k * outputHeight * outputWidth) + (i * outputWidth) + j] += sum;
                     /*
                     if(bias != NULL)
                     {
