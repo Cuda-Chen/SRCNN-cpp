@@ -61,6 +61,9 @@ private:
     std::vector<std::string> weights = {weightsConv1, weightsConv2,
         weightsConv3, biasConv1, biasConv2, biasConv3};
 
+    void naiveConvolution(double *input, double *output, ImageDim inputDim,
+        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
+        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
     void convolution(double *input, double *output, ImageDim inputDim,
         ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
         double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
