@@ -4,11 +4,14 @@
 #include <tuple>
 #include <fstream>
 #include <cassert>
+#include <chrono>
 
 #include "opencv2/opencv.hpp"
 #include "srcnn.hpp"
 
 #include "gaussian.hpp"
+
+#define IM2COL 1
 
 using namespace std;
 using namespace cv;
@@ -92,10 +95,15 @@ void SRCNN::generate(string filename)
     readBiasWeights(this->weights[4], bias2Weights); cout << "weight[4]" << endl;
     readBiasWeights(this->weights[5], bias3Weights); cout << "weight[5]" << endl;
 
+    auto start = chrono::steady_clock::now();
+
     // conv1 (feature extraction)
-    cout << "conv1" << endl;
+    //cout << "conv1" << endl;
+#if IM2COL
     convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
-    //naiveConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+#else
+    naiveConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+#endif
     activation(conv1Data, conv1Data, conv1Dim, RELU);
 #if 0 
     double *conv1arr = new double[get<1>(conv1Dim) * get<2>(conv1Dim)];
@@ -117,9 +125,12 @@ void SRCNN::generate(string filename)
 #endif
 
     // conv2 (non-linear mapping)
-    cout << "conv2" << endl;
+    //cout << "conv2" << endl;
+#if IM2COL
     convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
-    //naiveConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+#else
+    naiveConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+#endif
     activation(conv2Data, conv2Data, conv2Dim, RELU);
 #if 0
     double *conv2arr = new double[get<1>(conv2Dim) * get<2>(conv2Dim)];
@@ -141,9 +152,12 @@ void SRCNN::generate(string filename)
 #endif
 
     // conv3 (reconstruction)
-    cout << "conv3" << endl;
+    //cout << "conv3" << endl;
+#if IM2COL
     convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
-    //naiveConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+#else
+    naiveConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+#endif
 #if 0
     unsigned char *conv3arr = new unsigned char[get<1>(conv3Dim) * get<2>(conv3Dim)];
     for(int i = 0; i < get<0>(conv3Dim); i++)
@@ -166,6 +180,10 @@ void SRCNN::generate(string filename)
     }
     //delete [] conv3arr;
 #endif
+
+    auto end = chrono::steady_clock::now();
+    auto diff = end - start;
+    cout << chrono::duration<double>(diff).count() << " s" << endl;
 
     cout << "prepare output" << endl;
 #pragma omp parallel for
@@ -948,7 +966,7 @@ void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *b
     for(int i = 0; i < kernel_row; i++)
     {
 
-        cout << "working on output conv layer " << i << endl;
+        //cout << "working on output conv layer " << i << endl;
 #pragma omp parallel for
         for(int j = 0; j < in_col; j++)
         {

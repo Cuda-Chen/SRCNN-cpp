@@ -15,9 +15,9 @@ int main(int argc, char **argv)
 
     SRCNN srcnn;
     
-    srcnn.checkWeightStatus();
+    //srcnn.checkWeightStatus();
     srcnn.generate(filename);
-    srcnn.showOutput();
+    //srcnn.showOutput();
     //srcnn.outputImage();
     
     //srcnn.testImageConv(filename);
