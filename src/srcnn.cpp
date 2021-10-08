@@ -86,6 +86,17 @@ void SRCNN::generate(string filename)
     double *bias2Weights = new double[getTotalDimension(bias2Dim)];
     double *bias3Weights = new double[getTotalDimension(bias3Dim)]; 
     cout << "finish allocating conv and bias weights' space" << endl; 
+#if IM2COL
+    int conv1_col_height = get<2>(conv1WeightsDim) * get<3>(conv1WeightsDim) * get<1>(conv1WeightsDim);
+    int conv1_col_width = get<1>(conv1Dim) * get<2>(conv1Dim);
+    double *conv1Workspace = new double[conv1_col_height * conv1_col_width];
+    int conv2_col_height = get<2>(conv2WeightsDim) * get<3>(conv2WeightsDim) * get<1>(conv2WeightsDim);
+    int conv2_col_width = get<1>(conv2Dim) * get<2>(conv2Dim);
+    double *conv2Workspace = new double[conv2_col_height * conv2_col_width];
+    int conv3_col_height = get<2>(conv3WeightsDim) * get<3>(conv3WeightsDim) * get<1>(conv3WeightsDim);
+    int conv3_col_width = get<1>(conv3Dim) * get<2>(conv3Dim);
+    double *conv3Workspace = new double[conv3_col_height * conv3_col_width];
+#endif
 
     readConvWeights(this->weights[0], conv1Weights, conv1WeightsDim, NCWH, false); cout << "weight[0]" << endl;
     readConvWeights(this->weights[1], conv2Weights, conv2WeightsDim, CHWN, true); cout << "weight[1]" << endl;
@@ -100,7 +111,7 @@ void SRCNN::generate(string filename)
     // conv1 (feature extraction)
     //cout << "conv1" << endl;
 #if IM2COL
-    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
+    convolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim, conv1Workspace);
 #else
     naiveConvolution(input, conv1Data, inputDim, conv1Dim, conv1Weights, conv1WeightsDim, 1, bias1Weights, bias1Dim);
 #endif
@@ -127,7 +138,7 @@ void SRCNN::generate(string filename)
     // conv2 (non-linear mapping)
     //cout << "conv2" << endl;
 #if IM2COL
-    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
+    convolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim, conv2Workspace);
 #else
     naiveConvolution(conv1Data, conv2Data, conv1Dim, conv2Dim, conv2Weights_transposed, conv2WeightsDim, 1, bias2Weights, bias2Dim);
 #endif
@@ -154,7 +165,7 @@ void SRCNN::generate(string filename)
     // conv3 (reconstruction)
     //cout << "conv3" << endl;
 #if IM2COL
-    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
+    convolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim, conv3Workspace);
 #else
     naiveConvolution(conv2Data, conv3Data, conv2Dim, conv3Dim, conv3Weights, conv3WeightsDim, 1, bias3Weights, bias3Dim);
 #endif
@@ -225,6 +236,12 @@ void SRCNN::generate(string filename)
     delete [] bias1Weights;
     delete [] bias2Weights;
     delete [] bias3Weights;
+
+#if IM2COL
+    delete [] conv1Workspace;
+    delete [] conv2Workspace;
+    delete [] conv3Workspace;
+#endif
 }
 
 void SRCNN::showOutput()
