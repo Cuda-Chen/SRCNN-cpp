@@ -11,7 +11,7 @@
 
 #include "gaussian.hpp"
 
-#define IM2COL 1
+#define IM2COL 0
 
 using namespace std;
 using namespace cv;
@@ -735,7 +735,8 @@ void SRCNN::naiveConvolution(double *input, double *output, ImageDim inputDim,
 // standard convolution
 void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride/* = 1*/,
-    double *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/)
+    double *bias/* = NULL*/, ImageDim biasDim/* = make_tuple(0, 0, 0)*/,
+    double *workspace /*= NULL*/)
 {
     int kernelOutputChannel = get<0>(kernelDim);
     int kernelInputChannel = get<1>(kernelDim);
@@ -756,9 +757,16 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
 
     // input dimension = C * H * W = (K * K * C) * N
     // where N = out_h * out_w
+    double *input_col;
     int input_col_height = kernelHeight * kernelWidth * inputChannel;
     int input_col_width = outputHeight * outputWidth;
-    double *input_col = new double[input_col_height * input_col_width];
+    if(!workspace)
+    {
+        input_col = new double[input_col_height * input_col_width];
+    } else
+    {
+        input_col = workspace;
+    }
 
     int padding = kernelHeightSize; // temporary setting, may be changed in the future
 
@@ -803,7 +811,10 @@ void SRCNN::convolution(double *input, double *output, ImageDim inputDim,
     matMul(output, kernels, input_col, bias,
            kernel_col_height, kernel_col_width, input_col_height, input_col_width);
 
-    delete [] input_col;
+    if(!workspace)
+    {
+        delete [] input_col;
+    }
 }
 
 

@@ -66,7 +66,7 @@ private:
         double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
     void convolution(double *input, double *output, ImageDim inputDim,
         ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
-        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
+        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), double *workspace = NULL);
     void im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
                 int stride, int pad, double *data_col);
     void col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
