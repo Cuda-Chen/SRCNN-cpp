@@ -11,7 +11,8 @@
 
 #include "gaussian.hpp"
 
-#define IM2COL 0
+//#define IM2COL 0
+#define VECTOR_ALIGNEMENT 64
 
 using namespace std;
 using namespace cv;
@@ -855,7 +856,7 @@ void SRCNN::im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
         int w_offset = c % kernelWidth;
         int h_offset = (c / kernelWidth) % kernelHeight;
         int c_im = c / kernelWidth / kernelHeight;
-#pragma omp parallel for
+//#pragma omp parallel for
         for(int h = 0; h < col_height; h++)
         {
             for(int w = 0; w < col_width; w++)
@@ -887,7 +888,7 @@ void SRCNN::col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
         int w_offset = c % kernelWidth;
         int h_offset = (c / kernelWidth) % kernelHeight;
         int c_im = c / kernelWidth / kernelHeight;
-#pragma omp parallel for
+//#pragma omp parallel for
         for(int h = 0; h < col_height; h++)
         {
             for(int w = 0; w < col_width; w++)
@@ -969,13 +970,16 @@ void SRCNN::naiveGEMM(double *out, double *kernel, double *in,
      /* The output matrix dimension will be kernel_row * in_col */
     assert(kernel_col == in_row);
 
+    memset(out, 0, sizeof(double) * kernel_row * in_col);
+#pragma omp parallel for
     for(int i = 0; i < kernel_row; i++)
     {
-#pragma omp parallel for
-        for(int j = 0; j < in_col; j++)
+        //for(int j = 0; j < in_col; j++)
+        for(int k = 0; k < in_row; k++)
         {
-            out[i * in_col + j] = 0;
-            for(int k = 0; k < in_row; k++)
+            //out[i * in_col + j] = 0;
+            //for(int k = 0; k < in_row; k++)
+            for(int j = 0; j < in_col; j++)
             {
                 out[i * in_col + j] +=
                     kernel[i * kernel_col + k] *
@@ -985,29 +989,45 @@ void SRCNN::naiveGEMM(double *out, double *kernel, double *in,
     }
 }
 
-void SRCNN::naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
+void SRCNN::naiveGEMM_addBias(double * __restrict__ pout, double * __restrict__ pkernel, double * __restrict__ pin, double *bias,
                               int kernel_row, int kernel_col, int in_row, int in_col)
 {
     /* The output matrix dimension will be kernel_row * in_col */
     assert(kernel_col == in_row);
 
+    const double *kernel = (const double *)__builtin_assume_aligned(pkernel, VECTOR_ALIGNEMENT);
+    const double *in = (const double *)__builtin_assume_aligned(pin, VECTOR_ALIGNEMENT);
+    double *out = (double *)__builtin_assume_aligned(pout, VECTOR_ALIGNEMENT);
+
+    memset(out, 0, sizeof(double) * kernel_row * in_col);
+#pragma omp parallel for
     for(int i = 0; i < kernel_row; i++)
     {
 
         //cout << "working on output conv layer " << i << endl;
-#pragma omp parallel for
-        for(int j = 0; j < in_col; j++)
+        //for(int j = 0; j < in_col; j++)
+        for(int k = 0; k < in_row; k++)
         {
-            out[i * in_col + j] = 0;
-            for(int k = 0; k < in_row; k++)
+            //out[i * in_col + j] = 0;
+            //for(int k = 0; k < in_row; k++)
+            for(int j = 0; j < in_col; j++)
             {
                 out[i * in_col + j] +=
                     kernel[i * kernel_col + k] *
                     in[k * in_col + j];
             }
+        }
+    }
+
+#pragma omp parallel for
+    for(int i = 0; i < kernel_row; i++)
+    {
+        for(int j = 0; j < in_col; j++)
+        {
             out[i * in_col + j] += bias[i];
         }
     }
+        
 }
 
 void SRCNN::transpose(double *out, double *in, int in_row, int in_col)
