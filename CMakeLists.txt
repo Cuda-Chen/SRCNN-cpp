@@ -20,10 +20,14 @@ add_executable(SRCNN_cpp
     src/srcnn.cpp
     src/gaussian.cpp)
 #set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast")
-set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2 -DIM2COL=1")
+#set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2 -DIM2COL=1")
 
 if(OpenMP_CXX_FOUND AND i_want_openmp)
+    message("SRCNN_cpp is built with OpenCV and OpenMP is enabled.")
+    set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2 -DIM2COL=1")
     target_link_libraries(SRCNN_cpp PUBLIC ${OpenCV_LIBS} OpenMP::OpenMP_CXX)
 else()
+    message("SRCNN_cpp is built with only OpenCV.")
+    set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2")
     target_link_libraries(SRCNN_cpp ${OpenCV_LIBS})
 endif()
