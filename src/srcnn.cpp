@@ -13,6 +13,7 @@
 
 //#define IM2COL 0
 #define VECTOR_ALIGNEMENT 64
+#define BLOCK_SIZE 64
 
 using namespace std;
 using namespace cv;
@@ -1000,21 +1001,30 @@ void SRCNN::naiveGEMM_addBias(double * __restrict__ pout, double * __restrict__ 
     double *out = (double *)__builtin_assume_aligned(pout, VECTOR_ALIGNEMENT);
 
     memset(out, 0, sizeof(double) * kernel_row * in_col);
-#pragma omp parallel for
-    for(int i = 0; i < kernel_row; i++)
-    {
 
-        //cout << "working on output conv layer " << i << endl;
-        //for(int j = 0; j < in_col; j++)
-        for(int k = 0; k < in_row; k++)
+    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE)
+    {
+        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE)
         {
-            //out[i * in_col + j] = 0;
-            //for(int k = 0; k < in_row; k++)
-            for(int j = 0; j < in_col; j++)
+            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE)
             {
-                out[i * in_col + j] +=
-                    kernel[i * kernel_col + k] *
-                    in[k * in_col + j];
+                int maxi = min(ii + BLOCK_SIZE, kernel_row);
+                #pragma omp parallel for
+                for(int i = ii; i < maxi; i++)
+                {
+                    int maxk = min(kk + BLOCK_SIZE, in_row);
+                    for(int k = kk; k < maxk; k++)
+                    {
+                        double temp = kernel[i * kernel_col + k];
+                        int maxj = min(jj + BLOCK_SIZE, in_col);
+                        for(int j = jj; j < maxj; j++)
+                        {
+                            out[i * in_col + j] +=
+                                temp *
+                                in[k * in_col + j];
+                        }
+                    }
+                }
             }
         }
     }
