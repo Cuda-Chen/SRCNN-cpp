@@ -960,7 +960,7 @@ void SRCNN::matMul(double *out, double *kernel, double *in, double *bias,
     }
     else
     {
-        naiveGEMM_addBias(out, kernel, in, bias,
+        tiledNVectorizedGEMM_addBias(out, kernel, in, bias,
                           kernel_row, kernel_col, in_row, in_col);
     }
 }
@@ -1039,6 +1039,57 @@ void SRCNN::naiveGEMM_addBias(double * __restrict__ pout, double * __restrict__ 
     }
         
 }
+
+void SRCNN::tiledNVectorizedGEMM_addBias(double * __restrict__ pout, double * __restrict__ pkernel, double * __restrict__ pin, double *bias,
+                              int kernel_row, int kernel_col, int in_row, int in_col)
+{
+    /* The output matrix dimension will be kernel_row * in_col */
+    assert(kernel_col == in_row);
+
+    const double *kernel = (const double *)__builtin_assume_aligned(pkernel, VECTOR_ALIGNEMENT);
+    const double *in = (const double *)__builtin_assume_aligned(pin, VECTOR_ALIGNEMENT);
+    double *out = (double *)__builtin_assume_aligned(pout, VECTOR_ALIGNEMENT);
+
+    memset(out, 0, sizeof(double) * kernel_row * in_col);
+
+    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE)
+    {
+        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE)
+        {
+            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE)
+            {
+                int maxi = min(ii + BLOCK_SIZE, kernel_row);
+                int maxk = min(kk + BLOCK_SIZE, in_row);
+                int maxj = min(jj + BLOCK_SIZE, in_col);
+                #pragma omp parallel for
+                for(int i = ii; i < maxi; i++)
+                {
+                    for(int k = kk; k < maxk; k++)
+                    {
+                        double temp = kernel[i * kernel_col + k];
+                        for(int j = jj; j < maxj; j++)
+                        {
+                            out[i * in_col + j] +=
+                                temp *
+                                in[k * in_col + j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+#pragma omp parallel for
+    for(int i = 0; i < kernel_row; i++)
+    {
+        for(int j = 0; j < in_col; j++)
+        {
+            out[i * in_col + j] += bias[i];
+        }
+    }
+        
+}
+
 
 void SRCNN::transpose(double *out, double *in, int in_row, int in_col)
 {
