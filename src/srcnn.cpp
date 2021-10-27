@@ -13,7 +13,7 @@
 
 //#define IM2COL 0
 #define VECTOR_ALIGNEMENT 64
-#define BLOCK_SIZE 64
+#define BLOCK_SIZE 256
 
 using namespace std;
 using namespace cv;
@@ -1009,14 +1009,14 @@ void SRCNN::naiveGEMM_addBias(double * __restrict__ pout, double * __restrict__ 
             for(int jj = 0; jj < in_col; jj += BLOCK_SIZE)
             {
                 int maxi = min(ii + BLOCK_SIZE, kernel_row);
+                int maxk = min(kk + BLOCK_SIZE, in_row);
+                int maxj = min(jj + BLOCK_SIZE, in_col);
                 #pragma omp parallel for
                 for(int i = ii; i < maxi; i++)
                 {
-                    int maxk = min(kk + BLOCK_SIZE, in_row);
                     for(int k = kk; k < maxk; k++)
                     {
                         double temp = kernel[i * kernel_col + k];
-                        int maxj = min(jj + BLOCK_SIZE, in_col);
                         for(int j = jj; j < maxj; j++)
                         {
                             out[i * in_col + j] +=
