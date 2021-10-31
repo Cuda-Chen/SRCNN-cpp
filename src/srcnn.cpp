@@ -13,7 +13,7 @@
 
 //#define IM2COL 0
 #define VECTOR_ALIGNEMENT 64
-#define BLOCK_SIZE 256
+//#define BLOCK_SIZE 256
 
 using namespace std;
 using namespace cv;
@@ -1002,15 +1002,15 @@ void SRCNN::naiveGEMM_addBias(double * __restrict__ pout, double * __restrict__ 
 
     memset(out, 0, sizeof(double) * kernel_row * in_col);
 
-    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE)
+    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE_X)
     {
-        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE)
+        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE_Z)
         {
-            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE)
+            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE_Y)
             {
-                int maxi = min(ii + BLOCK_SIZE, kernel_row);
-                int maxk = min(kk + BLOCK_SIZE, in_row);
-                int maxj = min(jj + BLOCK_SIZE, in_col);
+                int maxi = min(ii + BLOCK_SIZE_X, kernel_row);
+                int maxk = min(kk + BLOCK_SIZE_Z, in_row);
+                int maxj = min(jj + BLOCK_SIZE_Y, in_col);
                 #pragma omp parallel for
                 for(int i = ii; i < maxi; i++)
                 {
@@ -1052,15 +1052,15 @@ void SRCNN::tiledNVectorizedGEMM_addBias(double * __restrict__ pout, double * __
 
     memset(out, 0, sizeof(double) * kernel_row * in_col);
 
-    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE)
+    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE_X)
     {
-        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE)
+        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE_Z)
         {
-            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE)
+            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE_Y)
             {
-                int maxi = min(ii + BLOCK_SIZE, kernel_row);
-                int maxk = min(kk + BLOCK_SIZE, in_row);
-                int maxj = min(jj + BLOCK_SIZE, in_col);
+                int maxi = min(ii + BLOCK_SIZE_X, kernel_row);
+                int maxk = min(kk + BLOCK_SIZE_Z, in_row);
+                int maxj = min(jj + BLOCK_SIZE_Y, in_col);
                 #pragma omp parallel for
                 for(int i = ii; i < maxi; i++)
                 {
