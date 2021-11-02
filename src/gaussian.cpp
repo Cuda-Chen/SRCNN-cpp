@@ -1,12 +1,13 @@
 #include <cmath>
 
 #include "gaussian.hpp"
+#include "datatype.hpp"
 
-const double PI = 3.14159;
+const data_t PI = 3.14159;
 
-void generateKernel(int width, int height, double sigma, double *kernel)
+void generateKernel(int width, int height, data_t sigma, data_t *kernel)
 {
-	double sum = 0.0;
+	data_t sum = 0.0;
 	int strideWidth = width / 2;
 	int strideHeight = height / 2;
 	
@@ -32,9 +33,9 @@ void generateKernel(int width, int height, double sigma, double *kernel)
 }
 
 void gaussianFilter(unsigned char *src, unsigned char *dst,
-	int width, int height, int kernelWidth, int kernelHeight, double sigma)
+	int width, int height, int kernelWidth, int kernelHeight, data_t sigma)
 {
-	double *kernel = new double[kernelWidth * kernelHeight];
+	data_t *kernel = new data_t[kernelWidth * kernelHeight];
 
 	generateKernel(kernelWidth, kernelHeight, sigma, kernel);
 
@@ -45,7 +46,7 @@ void gaussianFilter(unsigned char *src, unsigned char *dst,
 	{
 		for(int col = 0 + strideWidth; col < width - strideWidth; col++)
 		{
-			double temp = 0.0;
+			data_t temp = 0.0;
 			int xindex;
 			int yindex;
 			

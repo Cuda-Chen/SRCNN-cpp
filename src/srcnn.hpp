@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include "opencv2/opencv.hpp"
+#include "datatype.hpp"
 
 typedef std::tuple<int, int, int> ImageDim; // CHW (# channel, # height, # width)
 typedef std::tuple<int, int, int, int> KernelDim; // NCHW (# outputChannel, # inputChannel, # height, # width)
@@ -61,51 +62,51 @@ private:
     std::vector<std::string> weights = {weightsConv1, weightsConv2,
         weightsConv3, biasConv1, biasConv2, biasConv3};
 
-    void naiveConvolution(double *input, double *output, ImageDim inputDim,
-        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
-        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
-    void convolution(double *input, double *output, ImageDim inputDim,
-        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
-        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), double *workspace = NULL);
-    void im2col(double *data_im, ImageDim imageDim, KernelDim kernelDim,
-                int stride, int pad, double *data_col);
-    void col2im(double *data_col, ImageDim imageDim, KernelDim kernelDim,
-                int stride, int pad, double *data_im);
-    double im2colGetPixel(double *im, ImageDim imageDim, 
+    void naiveConvolution(data_t *input, data_t *output, ImageDim inputDim,
+        ImageDim outputDim, data_t *kernels, KernelDim kernelDim, int stride = 1,
+        data_t *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0));
+    void convolution(data_t *input, data_t *output, ImageDim inputDim,
+        ImageDim outputDim, data_t *kernels, KernelDim kernelDim, int stride = 1,
+        data_t *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), data_t *workspace = NULL);
+    void im2col(data_t *data_im, ImageDim imageDim, KernelDim kernelDim,
+                int stride, int pad, data_t *data_col);
+    void col2im(data_t *data_col, ImageDim imageDim, KernelDim kernelDim,
+                int stride, int pad, data_t *data_im);
+    data_t im2colGetPixel(data_t *im, ImageDim imageDim, 
                           int row, int col, int channel, int pad);
-    void col2imAddPixel(double *im, ImageDim imageDim,
-                        int row, int col, int channel, int pad, double value); 
-    void matMul(double *out, double *kernel, double *in, double *bias,
+    void col2imAddPixel(data_t *im, ImageDim imageDim,
+                        int row, int col, int channel, int pad, data_t value); 
+    void matMul(data_t *out, data_t *kernel, data_t *in, data_t *bias,
                 int kernel_row, int kernel_col, int in_row, int in_col); 
-    void naiveGEMM(double *out, double *kernel, double *in,
+    void naiveGEMM(data_t *out, data_t *kernel, data_t *in,
                    int kernel_row, int kernel_col, int in_row, int in_col);
-    void naiveGEMM_addBias(double *out, double *kernel, double *in, double *bias,
+    void naiveGEMM_addBias(data_t *out, data_t *kernel, data_t *in, data_t *bias,
                            int kernel_row, int kernel_col, int in_row, int in_col);
-    void tiledNVectorizedGEMM_addBias(double * __restrict__ pout, double * __restrict__ pkernel, double * __restrict__ pin, double *bias,
+    void tiledNVectorizedGEMM_addBias(data_t * __restrict__ pout, data_t * __restrict__ pkernel, data_t * __restrict__ pin, data_t *bias,
                            int kernel_row, int kernel_col, int in_row, int in_col);
-    void transpose(double *out, double *in, int in_row, int in_col);
+    void transpose(data_t *out, data_t *in, int in_row, int in_col);
 
-    void activation(double *input, double *output, ImageDim inputDim, 
+    void activation(data_t *input, data_t *output, ImageDim inputDim, 
         ACTIVATION activationType);
 
-    inline double relu_activate(double x) 
+    inline data_t relu_activate(data_t x) 
     {
         return x * (x > 0);
     }
 
-    void readConvWeights(std::string filename, double *weights, bool special = false, bool isReverse = false);
-    void readConvWeights(std::string filename, double *weights, KernelDim kernelDim, WeightFormat format, bool special = false);
-    void readBiasWeights(std::string filename, double *weights);
+    void readConvWeights(std::string filename, data_t *weights, bool special = false, bool isReverse = false);
+    void readConvWeights(std::string filename, data_t *weights, KernelDim kernelDim, WeightFormat format, bool special = false);
+    void readBiasWeights(std::string filename, data_t *weights);
 
     // unit test functions
-    void testConvolution(double *input, double *output, ImageDim inputDim,
-        ImageDim outputDim, double *kernels, KernelDim kernelDim, int stride = 1,
-        double *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), 
+    void testConvolution(data_t *input, data_t *output, ImageDim inputDim,
+        ImageDim outputDim, data_t *kernels, KernelDim kernelDim, int stride = 1,
+        data_t *bias = NULL, ImageDim biasDim = std::make_tuple(0, 0, 0), 
         std::string outputConvWeightPath = NULL, std::string outputBiasWeightPath = NULL);
-    void testReadConvWeights(std::string filename, std::string outputfile, double *weights, bool special = false, bool isReverse = false);
-    void testReadBiasWeights(std::string filename, std::string outputfile, double *weights);    
-    void testWriteWeights(std::string outputfile, double *weights, ImageDim imageDim);
-    void testWriteWeights(std::string outputfile, double *weights, KernelDim kernelDim);
+    void testReadConvWeights(std::string filename, std::string outputfile, data_t *weights, bool special = false, bool isReverse = false);
+    void testReadBiasWeights(std::string filename, std::string outputfile, data_t *weights);    
+    void testWriteWeights(std::string outputfile, data_t *weights, ImageDim imageDim);
+    void testWriteWeights(std::string outputfile, data_t *weights, KernelDim kernelDim);
 };
 
 #endif
