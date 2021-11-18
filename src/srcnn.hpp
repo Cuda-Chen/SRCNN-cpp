@@ -84,6 +84,10 @@ private:
                            int kernel_row, int kernel_col, int in_row, int in_col);
     void tiledNVectorizedGEMM_addBias(data_t * __restrict__ pout, data_t * __restrict__ pkernel, data_t * __restrict__ pin, data_t *bias,
                            int kernel_row, int kernel_col, int in_row, int in_col);
+    #ifdef ISX86
+    void intrinsicGEMM_addBias(float *out, float *kernel, float *in, float *bias,
+                           int kernel_row, int kernel_col, int in_row, int in_col);
+    #endif
     void transpose(data_t *out, data_t *in, int in_row, int in_col);
 
     void activation(data_t *input, data_t *output, ImageDim inputDim, 

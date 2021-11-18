@@ -966,8 +966,13 @@ void SRCNN::matMul(data_t *out, data_t *kernel, data_t *in, data_t *bias,
     {
         /*naiveGEMM_addBias(out, kernel, in, bias,
                           kernel_row, kernel_col, in_row, in_col);*/
+        #ifdef ISX86
+        intrinsicGEMM_addBias(out, kernel, in, bias,
+                          kernel_row, kernel_col, in_row, in_col);
+        #else
         tiledNVectorizedGEMM_addBias(out, kernel, in, bias,
                           kernel_row, kernel_col, in_row, in_col);
+        #endif
     }
 }
  
@@ -1082,6 +1087,51 @@ void SRCNN::tiledNVectorizedGEMM_addBias(data_t * __restrict__ pout, data_t * __
         
 }
 
+#ifdef ISX86
+void SRCNN::intrinsicGEMM_addBias(float *out, float *kernel, float *in, float *bias,
+                      int kernel_row, int kernel_col, int in_row, int in_col) {
+    /* The output matrix dimension will be kernel_row * in_col */
+    assert(kernel_col == in_row);
+
+    memset(out, 0, sizeof(float) * kernel_row * in_col);
+
+    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE_X)
+    {
+        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE_Z)
+        {
+            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE_Y)
+            {
+                int maxi = min(ii + BLOCK_SIZE_X, kernel_row);
+                int maxk = min(kk + BLOCK_SIZE_Z, in_row);
+                int maxj = min(jj + BLOCK_SIZE_Y, in_col);
+                #pragma omp parallel for
+                for(int i = ii; i < maxi; i++)
+                {
+                    for(int k = kk; k < maxk; k++)
+                    {
+                        float temp = kernel[i * kernel_col + k];
+                        for(int j = jj; j < maxj; j++)
+                        {
+                            out[i * in_col + j] +=
+                                temp *
+                                in[k * in_col + j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #pragma omp parallel for
+    for(int i = 0; i < kernel_row; i++)
+    {
+        for(int j = 0; j < in_col; j++)
+        {
+            out[i * in_col + j] += bias[i];
+        }
+    }
+}
+#endif
 
 void SRCNN::transpose(data_t *out, data_t *in, int in_row, int in_col)
 {

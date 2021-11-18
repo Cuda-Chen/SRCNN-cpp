@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 
 project(SRCNN_cpp)
 
-set(i_want_openmp ON)
+set(i_want_openmp OFF)
 set(EXECUTABLE_OUTPUT_PATH "..")
 set(CMAKE_CXX_STANDARD 11)
 
@@ -24,10 +24,10 @@ add_executable(SRCNN_cpp
 
 if(OpenMP_CXX_FOUND AND i_want_openmp)
     message("SRCNN_cpp is built with OpenCV and OpenMP is enabled.")
-    set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2 -DIM2COL=1 -DBLOCK_SIZE_X=256 -DBLOCK_SIZE_Y=256 -DBLOCK_SIZE_Z=256 -DUSEFLOAT=1")
+    set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2 -DIM2COL=1 -DBLOCK_SIZE_X=256 -DBLOCK_SIZE_Y=256 -DBLOCK_SIZE_Z=256 -DUSEFLOAT=1 -DISX86=1")
     target_link_libraries(SRCNN_cpp PUBLIC ${OpenCV_LIBS} OpenMP::OpenMP_CXX)
 else()
     message("SRCNN_cpp is built with only OpenCV.")
-    set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2 -DIM2COL=1 -DBLOCK_SIZE_X=256 -DBLOCK_SIZE_Y=256 -DBLOCK_SIZE_Z=256 -DUSEFLOAT=0")
+    set_property(TARGET SRCNN_cpp PROPERTY COMPILE_FLAGS "-Ofast -ftree-vectorize -march=native -mtune=native -mavx2 -DIM2COL=1 -DBLOCK_SIZE_X=256 -DBLOCK_SIZE_Y=256 -DBLOCK_SIZE_Z=256 -DUSEFLOAT=1 -DISX86=1")
     target_link_libraries(SRCNN_cpp ${OpenCV_LIBS})
 endif()
