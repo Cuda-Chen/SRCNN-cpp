@@ -9,8 +9,13 @@
 #include "opencv2/opencv.hpp"
 #include "srcnn.hpp"
 #include "datatype.hpp"
-
 #include "gaussian.hpp"
+
+#ifdef __x86_64__
+   #include <immintrin.h>
+#else   
+   #include "sse2neon.h"
+#endif
 
 //#define IM2COL 0
 #define VECTOR_ALIGNEMENT 64
@@ -1089,7 +1094,8 @@ void SRCNN::tiledNVectorizedGEMM_addBias(data_t * __restrict__ pout, data_t * __
 
 #ifdef ISX86
 void SRCNN::intrinsicGEMM_addBias(float *out, float *kernel, float *in, float *bias,
-                      int kernel_row, int kernel_col, int in_row, int in_col) {
+                      int kernel_row, int kernel_col, int in_row, int in_col)
+{
     /* The output matrix dimension will be kernel_row * in_col */
     assert(kernel_col == in_row);
 
@@ -1122,12 +1128,33 @@ void SRCNN::gemm_nn(int M, int N, int K, float ALPHA,
         for(int k = 0; k < K; k++)
         {
             float A_PART = ALPHA * A[i * lda + k];
+            __m256 a256, b256, c256, result256;
+            a256 = _mm256_set1_ps(A_PART);
+            for(int j = 0; j < N - 8; j += 8)
+            {
+                b256 = _mm256_loadu_ps(&B[k * ldb + j]);
+                c256 = _mm256_loadu_ps(&C[i * ldc + j]);
+                result256 = _mm256_mul_ps(a256, b256);
+                result256 = _mm256_add_ps(result256, c256);
+                _mm256_storeu_ps(&C[i * ldc + j], result256);
+            }
+
+            int prev_end = (N % 8 == 0) ? (N - 8) : (N / 8) * 8;
+            for(int j = prev_end; j < N; j++)
+                C[i * ldc + j] += A_PART * B[k * ldb + j];
+        }
+    }
+    /*for(int i = 0; i < M; i++)
+    {
+        for(int k = 0; k < K; k++)
+        {
+            float A_PART = ALPHA * A[i * lda + k];
             for(int j = 0; j < N; j++)
             {
                 C[i * ldc + j] += A_PART * B[k * ldb + j];
             }
         }
-    }
+    }*/
 }
 
 #endif
