@@ -1095,32 +1095,12 @@ void SRCNN::intrinsicGEMM_addBias(float *out, float *kernel, float *in, float *b
 
     memset(out, 0, sizeof(float) * kernel_row * in_col);
 
-    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE_X)
-    {
-        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE_Z)
-        {
-            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE_Y)
-            {
-                int maxi = min(ii + BLOCK_SIZE_X, kernel_row);
-                int maxk = min(kk + BLOCK_SIZE_Z, in_row);
-                int maxj = min(jj + BLOCK_SIZE_Y, in_col);
-                #pragma omp parallel for
-                for(int i = ii; i < maxi; i++)
-                {
-                    for(int k = kk; k < maxk; k++)
-                    {
-                        float temp = kernel[i * kernel_col + k];
-                        for(int j = jj; j < maxj; j++)
-                        {
-                            out[i * in_col + j] +=
-                                temp *
-                                in[k * in_col + j];
-                        }
-                    }
-                }
-            }
-        }
-    }
+    #pragma omp parallel for
+    for(int t = 0; t < kernel_row; t++)
+        gemm_nn(1, in_col, kernel_col, 1.0, 
+                kernel + t * kernel_col, kernel_col,
+                in, in_col,
+                out + t * in_col, in_col);
 
     #pragma omp parallel for
     for(int i = 0; i < kernel_row; i++)
@@ -1131,6 +1111,25 @@ void SRCNN::intrinsicGEMM_addBias(float *out, float *kernel, float *in, float *b
         }
     }
 }
+
+void SRCNN::gemm_nn(int M, int N, int K, float ALPHA,
+                    float *A, int lda,
+                    float *B, int ldb,
+                    float *C, int ldc)
+{
+    for(int i = 0; i < M; i++)
+    {
+        for(int k = 0; k < K; k++)
+        {
+            float A_PART = ALPHA * A[i * lda + k];
+            for(int j = 0; j < N; j++)
+            {
+                C[i * ldc + j] += A_PART * B[k * ldb + j];
+            }
+        }
+    }
+}
+
 #endif
 
 void SRCNN::transpose(data_t *out, data_t *in, int in_row, int in_col)
