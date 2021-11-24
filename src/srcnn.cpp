@@ -1101,12 +1101,62 @@ void SRCNN::intrinsicGEMM_addBias(float *out, float *kernel, float *in, float *b
 
     memset(out, 0, sizeof(float) * kernel_row * in_col);
 
-    #pragma omp parallel for
+    /*#pragma omp parallel for
     for(int t = 0; t < kernel_row; t++)
         gemm_nn(1, in_col, kernel_col, 1.0, 
                 kernel + t * kernel_col, kernel_col,
                 in, in_col,
-                out + t * in_col, in_col);
+                out + t * in_col, in_col);*/
+    for(int ii = 0; ii < kernel_row; ii += BLOCK_SIZE_X)
+    {
+        for(int kk = 0; kk < in_row; kk += BLOCK_SIZE_Z)
+        {
+            for(int jj = 0; jj < in_col; jj += BLOCK_SIZE_Y)
+            {
+                int maxi = min(ii + BLOCK_SIZE_X, kernel_row);
+                int maxk = min(kk + BLOCK_SIZE_Z, in_row);
+                int maxj = min(jj + BLOCK_SIZE_Y, in_col);
+                /*#pragma omp parallel for
+                for(int i = ii; i < maxi; i++)
+                {
+                    for(int k = kk; k < maxk; k++)
+                    {
+                        data_t temp = kernel[i * kernel_col + k];
+                        for(int j = jj; j < maxj; j++)
+                        {
+                            out[i * in_col + j] +=
+                                temp *
+                                in[k * in_col + j];
+                        }
+                    }
+                }*/
+                #pragma omp parallel for
+                for(int i = ii; i < maxi; i++)
+                {
+                    for(int k = kk; k < maxk; k++)
+                    {
+                        float temp = kernel[i * kernel_col + k];
+                        __m256 temp256, in256, out256, result256;
+                        temp256 = _mm256_set1_ps(temp);
+                        for(int j = jj; j < maxj - 8; j += 8)
+                        {
+                            in256 = _mm256_loadu_ps(&in[k * in_col + j]);
+                            out256 = _mm256_loadu_ps(&out[i * in_col + j]);
+                            // FMA
+                            result256 = _mm256_fmadd_ps(temp256, in256, out256);
+                            /*result256 = _mm256_mul_ps(temp256, in256);
+                            result256 = _mm256_add_ps(result256, out256);*/
+                            _mm256_storeu_ps(&out[i * in_col + j], result256);
+                        }
+
+                        int prev_end = (maxj % 8 == 0) ? (maxj - 8) : (maxj / 8) * 8;
+                        for(int j = prev_end; j < maxj; j++)
+                            out[i * in_col + j] += temp * in[k * in_col + j];
+                    }
+                }
+            }
+        }
+    }
 
     #pragma omp parallel for
     for(int i = 0; i < kernel_row; i++)
@@ -1278,9 +1328,9 @@ void SRCNN::readConvWeights(string filename, data_t *kernel, KernelDim kernelDim
                         for(int w = 0; w < num_width; w++)
                         {
                             input >> kernel[((n * num_channel + c) * num_height + h) * num_width + w];
-                            cout << "index " << ((n * num_channel + c) * num_height + h) * num_width + w << " n " << n << " c " << c
+                            /*cout << "index " << ((n * num_channel + c) * num_height + h) * num_width + w << " n " << n << " c " << c
                                 << " h " << h << " w " << w << " " << kernel[((n * num_channel + c) * num_height + h) * num_width + w]
-                                << endl;
+                                << endl;*/
                         }
                     }
                 }
@@ -1313,13 +1363,13 @@ void SRCNN::readConvWeights(string filename, data_t *kernel, KernelDim kernelDim
                         for(int c = 0; c < num_channel; c++)
                         {
                             input >> kernel[((c * num_height + h) * num_width + w) * num_filter + n];
-                            cout << "index " << ((c * num_height + h) * num_width + w) * num_filter + n 
+                            /*cout << "index " << ((c * num_height + h) * num_width + w) * num_filter + n 
                                 << " c " << c
                                 << " h " << h 
                                 << " w " << w 
                                 << " n " << n 
                                 << " " << kernel[((c * num_height + h) * num_width + w) * num_filter + n]
-                                << endl;
+                                << endl;*/
                         }
                     }
                 }
@@ -1336,13 +1386,13 @@ void SRCNN::readConvWeights(string filename, data_t *kernel, KernelDim kernelDim
                         for(int w = 0; w < num_width; w++)
                         {
                             input >> kernel[((n * num_channel + c) * num_width + w) * num_height + h];
-                            cout << "index " << ((n * num_channel + c) * num_width + w) * num_height + h
+                            /*cout << "index " << ((n * num_channel + c) * num_width + w) * num_height + h
                                 << " n " << n
                                 << " c " << c
                                 << " w " << w
                                 << " h " << h
                                 << " " << kernel[((n * num_channel + c) * num_width + w) * num_height + h]
-                                << endl;
+                                << endl;*/
                         }
                     }
                 }
