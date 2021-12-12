@@ -93,6 +93,8 @@ private:
                  float *C, int ldc);
     void intrinsicGEMM_microkernel_addBias(float *out, float *kernel, float *in, float *bias,
                            int kernel_row, int kernel_col, int in_row, int in_col);
+    void intrinsicGEMM_microkernel_with_packing_addBias(float *out, float *kernel, float *in, float *bias,
+                           int kernel_row, int kernel_col, int in_row, int in_col);
     #endif
     void transpose(data_t *out, data_t *in, int in_row, int in_col);
 
