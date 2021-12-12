@@ -979,7 +979,9 @@ void SRCNN::matMul(data_t *out, data_t *kernel, data_t *in, data_t *bias,
         #ifdef ISX86
         /*intrinsicGEMM_addBias(out, kernel, in, bias,
                           kernel_row, kernel_col, in_row, in_col);*/
-        intrinsicGEMM_microkernel_addBias(out, kernel, in, bias,
+        /*intrinsicGEMM_microkernel_addBias(out, kernel, in, bias,
+                          kernel_row, kernel_col, in_row, in_col);*/
+        intrinsicGEMM_microkernel_with_packing_addBias(out, kernel, in, bias,
                           kernel_row, kernel_col, in_row, in_col);
 
         #else
@@ -1405,14 +1407,28 @@ void SRCNN::intrinsicGEMM_microkernel_with_packing_addBias(float *out, float *ke
                 c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
                 c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
 
+                // Pack up A
+                float packedA[TILE_M * TILE_K];
+                if(j == 0) {
+                    for(int a = 0; a < TILE_M; a++) 
+                    {
+                        for(int b = 0; b < TILE_K; b++)
+                            packedA[a * TILE_K + b] = A[(a + i) * lda + (b + k)];
+                    }
+                }
 
                 for (k_d = 0; k_d < (TILE_K); ++k_d)
                 {
-                    a256_0 = _mm256_set1_ps(ALPHA*A[(0 + i)*lda + (k_d + k)]);
+                    /*a256_0 = _mm256_set1_ps(ALPHA*A[(0 + i)*lda + (k_d + k)]);
                     a256_1 = _mm256_set1_ps(ALPHA*A[(1 + i)*lda + (k_d + k)]);
 
                     a256_2 = _mm256_set1_ps(ALPHA*A[(2 + i)*lda + (k_d + k)]);
-                    a256_3 = _mm256_set1_ps(ALPHA*A[(3 + i)*lda + (k_d + k)]);
+                    a256_3 = _mm256_set1_ps(ALPHA*A[(3 + i)*lda + (k_d + k)]);*/
+                    a256_0 = _mm256_set1_ps(ALPHA * packedA[0 * TILE_K + k_d]);
+                    a256_1 = _mm256_set1_ps(ALPHA * packedA[1 * TILE_K + k_d]);
+
+                    a256_2 = _mm256_set1_ps(ALPHA * packedA[2 * TILE_K + k_d]);
+                    a256_3 = _mm256_set1_ps(ALPHA * packedA[3 * TILE_K + k_d]);
 
 
                     b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
