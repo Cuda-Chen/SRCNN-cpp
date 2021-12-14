@@ -1375,6 +1375,7 @@ void SRCNN::intrinsicGEMM_microkernel_with_packing_addBias(float *out, float *ke
 
     int i;
 
+
     #pragma omp parallel for
     for (i = 0; i < (M / TILE_M)*TILE_M; i += TILE_M)
     {
@@ -1417,15 +1418,9 @@ void SRCNN::intrinsicGEMM_microkernel_with_packing_addBias(float *out, float *ke
                     }
                 }
                 // Pack up B
-                // Packing up B results slower execution time
-                /*float packedB[TILE_K * TILE_N];
-                if(i == 0) {
-                    for(int a = 0; a < TILE_K; a++)
-                    {
-                        for(int b = 0; b < TILE_N; b++)
-                            packedB[a * TILE_N + b] = B[(a + k) * ldb + (b + j)];
-                    }
-                }*/
+                // This packing method is faster on multi-thread, but slower
+                // on single thread.
+                //float packedB[TILE_N];
 
                 for (k_d = 0; k_d < (TILE_K); ++k_d)
                 {
@@ -1443,8 +1438,10 @@ void SRCNN::intrinsicGEMM_microkernel_with_packing_addBias(float *out, float *ke
 
                     b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
                     b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
-                    /*b256_0 = _mm256_loadu_ps(&packedB[k_d * TILE_N + 0]);
-                    b256_1 = _mm256_loadu_ps(&packedB[k_d * TILE_N + 8]);*/
+                    /*for(int j_d = 0; j_d < TILE_N; j_d++)
+                        packedB[j_d] = B[(k_d + k) * ldb + (j_d + j)];
+                    b256_0 = _mm256_loadu_ps(&packedB[0]);
+                    b256_1 = _mm256_loadu_ps(&packedB[8]);*/
 
                     // FMA - Intel Haswell (2013), AMD Piledriver (2012)
                     //c256_0 = _mm256_fmadd_ps(a256_0, b256_0, c256_0);
